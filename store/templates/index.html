@@ -268,81 +268,113 @@
             nav { padding: 20px; }
             .nav-links { display: none; } /* Ocultar menú en móvil para simplificar */
         }
+        /* --- NUEVOS ESTILOS PARA EL NAVBAR DERECHO --- */
+
+    /* Agrupa el carrito y el usuario */
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 20px; /* Espacio entre carrito y usuario */
+    }
+
+    /* Ajustes para el botón de carrito */
+    .cart-btn {
+        padding: 8px 20px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* Sección de usuario */
+    .user-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 0.9rem;
+        border-left: 1px solid rgba(255,255,255,0.2);
+        padding-left: 20px;
+    }
+
+    /* Nombre del usuario logueado */
+    .username {
+        color: var(--highlight);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Enlaces de Login/Logout */
+    .auth-link {
+        color: var(--text-main);
+        text-decoration: none;
+        transition: color 0.3s;
+        font-weight: 500;
+    }
+
+    .auth-link:hover {
+        color: var(--accent);
+    }
+
+    /* Estilo específico para el botón de "Iniciar Sesión" si no está logueado */
+    .login-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* AJUSTE RESPONSIVO EXTRA */
+    @media (max-width: 768px) {
+        .nav-right {
+            gap: 10px;
+        }
+        .user-section {
+            padding-left: 10px;
+            font-size: 0.8rem;
+        }
+        .username {
+            display: none; /* En celular oculta el nombre, deja solo el icono de salir si quieres ahorrar espacio */
+        }
+    }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo">MYSTERIO<i class="fa-solid fa-cube"></i></div>
+        
         <div class="nav-links">
-            <a href="#">Inicio</a>
-            <a href="#cajas">Cajas</a>
+            <a href="{% url 'home' %}">Inicio</a> <a href="#cajas">Cajas</a>
             <a href="#funcionamiento">Cómo funciona</a>
             <a href="#contacto">Contacto</a>
         </div>
-        <a href="#" class="btn btn-primary" style="padding: 8px 20px; font-size: 0.8rem;">Ver Carrito</a>
+
+        <div class="nav-right">
+            <a href="#" class="btn btn-primary cart-btn">Ver Carrito</a>
+
+            <div class="user-section">
+                {% if user.is_authenticated %}
+                    <span class="username">
+                        <i class="fa-solid fa-user-astronaut"></i> {{ user.username }}
+                    </span>
+                    <form action="{% url 'logout' %}" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="auth-link" title="Cerrar sesión" 
+                                style="background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit;">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="auth-link login-btn">
+                        <i class="fa-regular fa-user"></i> Iniciar Sesión
+                    </a>
+                {% endif %}
+            </div>
+        </div>
     </nav>
-
-    <header class="hero">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
         
-        <div class="hero-content">
-            <i class="fa-solid fa-gift floating-box-icon"></i>
-            <h1>El misterio te <br><span>está esperando</span></h1>
-            <p>Cajas curadas con los mejores artículos Tech, Gamer y Lifestyle. <br>Tú eliges la temática, nosotros te sorprendemos.</p>
-            <a href="#cajas" class="btn btn-primary">Abrir una Caja</a>
-        </div>
-    </header>
 
-    <section id="cajas" class="container">
-        <h2 class="section-title">Nuestras Mystery Boxes</h2>
-        
-        <div class="products-grid">
-            <div class="mystery-card">
-                <i class="fa-solid fa-gamepad card-icon"></i>
-                <h3>Gamer Box Elite</h3>
-                <p>Periféricos, coleccionables y accesorios RGB. Posibilidad de ganar consolas.</p>
-                <span class="price">$49.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-
-            <div class="mystery-card">
-                <i class="fa-solid fa-robot card-icon"></i>
-                <h3>Tech Gadgets</h3>
-                <p>Lo último en gadgets, smart home y utilidades tech curiosas que no conocías.</p>
-                <span class="price">$29.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-
-            <div class="mystery-card">
-                <i class="fa-solid fa-shirt card-icon"></i>
-                <h3>Streetwear Pack</h3>
-                <p>Ropa y accesorios de marcas urbanas. Hoodies, gorras y calcetines exclusivos.</p>
-                <span class="price">$39.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-             <div class="mystery-card">
-                <i class="fa-solid fa-dragon card-icon"></i>
-                <h3>Otaku Chest</h3>
-                <p>Figuras, mangas, snacks japoneses y accesorios de tus animes favoritos.</p>
-                <span class="price">$34.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="logo" style="margin-bottom: 20px; font-size: 1.5rem;">MYSTERIO</div>
-            <div class="socials">
-                <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                <a href="#"><i class="fa-brands fa-tiktok"></i></a>
-                <a href="#"><i class="fa-brands fa-twitter"></i></a>
-            </div>
-            <p style="color: var(--text-muted); font-size: 0.8rem;">&copy; 2024 Mysterio Box Co. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+{% block contenido %}
+{% endblock %}
 
 </body>
 </html>

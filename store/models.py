@@ -24,8 +24,11 @@ class Mystery_Box(models.Model):
     nombre = models.CharField(max_length=50)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
     allowed_categories = models.ManyToManyField('categoria', related_name="categoria")
+    descripcion = models.CharField(max_length=250, blank=True, null=True)
     #DIFERENCIA DECIMALFIELD Y FLOATFIELT ES , el decimal siempre se debe usar para dinero, ya que floatfield no SIEMPRE es exacto
     #aveces 10.00 en decimal es 10.00000000001.
+    def __str__(self):
+        return f"Caja {self.nombre}"
 
 class Suscripcion(models.Model): 
     #usuario = models.ForeignKey(users.usuarios, related_name='usuario, on_delete=models.PROTECT)
@@ -41,5 +44,4 @@ class Envios(models.Model):
     fecha_envio = models.DateField(default = timezone.now)
     productos = models.ManyToManyField('producto', related_name='productos')
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    pass
 

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-e!9+#g%&563ck86r8c5m+b0_&9#9fl0xta&x-)w=wg^d7@uig*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['mysteryshop.com', 'www.mysteryshop.com']
 
 
 # Application definition
@@ -122,3 +122,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#REDIRECTS
+LOGIN_REDIRECT_URL = "home" #al iniciar sesion corrrectamente
+LOGIN_URL = 'login' #para intentar iniciar sesion
+LOGOUT_REDIRECT_URL = 'home'

@@ -1,0 +1,63 @@
+{% extends "index.html" %}
+{% block contenido %}
+    <header class="hero">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="hero-content">
+            <i class="fa-solid fa-gift floating-box-icon"></i>
+            <h1>El misterio te <br><span>está esperando</span></h1>
+            <p>Cajas curadas con los mejores artículos Tech, Gamer y Lifestyle. <br>Tú eliges la temática, nosotros te sorprendemos.</p>
+            <a href="#cajas" class="btn btn-primary">Abrir una Caja</a>
+        </div>
+    </header>
+
+    <section id="cajas" class="container">
+        <h2 class="section-title">Nuestras Mystery Boxes</h2>
+        
+        <div class="products-grid">
+            <div class="mystery-card">
+                <i class="fa-solid fa-gamepad card-icon"></i>
+                <h3>Gamer Box Elite</h3>
+                <p>Periféricos, coleccionables y accesorios RGB. Posibilidad de ganar consolas.</p>
+                <span class="price">$49.99</span>
+                <a href="#" class="btn btn-primary">Comprar Ahora</a>
+            </div>
+
+            <div class="mystery-card">
+                <i class="fa-solid fa-robot card-icon"></i>
+                <h3>Tech Gadgets</h3>
+                <p>Lo último en gadgets, smart home y utilidades tech curiosas que no conocías.</p>
+                <span class="price">$29.99</span>
+                <a href="#" class="btn btn-primary">Comprar Ahora</a>
+            </div>
+
+            <div class="mystery-card">
+                <i class="fa-solid fa-shirt card-icon"></i>
+                <h3>Streetwear Pack</h3>
+                <p>Ropa y accesorios de marcas urbanas. Hoodies, gorras y calcetines exclusivos.</p>
+                <span class="price">$39.99</span>
+                <a href="#" class="btn btn-primary">Comprar Ahora</a>
+            </div>
+             <div class="mystery-card">
+                <i class="fa-solid fa-dragon card-icon"></i>
+                <h3>Otaku Chest</h3>
+                <p>Figuras, mangas, snacks japoneses y accesorios de tus animes favoritos.</p>
+                <span class="price">$34.99</span>
+                <a href="#" class="btn btn-primary">Comprar Ahora</a>
+            </div>
+        </div>
+    </section>
+       
+
+    <footer>
+        <div class="container">
+            <div class="logo" style="margin-bottom: 20px; font-size: 1.5rem;">MYSTERIO</div>
+            <div class="socials">
+                <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="#"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">&copy; 2024 Mysterio Box Co. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+{% endblock %}
