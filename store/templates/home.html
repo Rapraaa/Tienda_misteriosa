@@ -15,14 +15,16 @@
         <h2 class="section-title">Nuestras Mystery Boxes</h2>
         
         <div class="products-grid">
+            {%for box in boxes%}
             <div class="mystery-card">
                 <i class="fa-solid fa-gamepad card-icon"></i>
-                <h3>Gamer Box Elite</h3>
-                <p>Periféricos, coleccionables y accesorios RGB. Posibilidad de ganar consolas.</p>
-                <span class="price">$49.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-
+                <h3>{{box.nombre}}</h3>
+                <p>{{box.descripcion}}</p>
+                <span class="price">${{box.monthly_price}}</span>
+                <a href="{% url 'box' box.id %}" class="btn btn-primary">Comprar Ahora</a>
+            </div> 
+            {% endfor %}
+{% comment %}
             <div class="mystery-card">
                 <i class="fa-solid fa-robot card-icon"></i>
                 <h3>Tech Gadgets</h3>
@@ -45,9 +47,10 @@
                 <span class="price">$34.99</span>
                 <a href="#" class="btn btn-primary">Comprar Ahora</a>
             </div>
+            {% endcomment %} 
         </div>
     </section>
-       
+  
 
     <footer>
         <div class="container">

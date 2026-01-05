@@ -181,7 +181,12 @@
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(15px);
+
+            display: flex;
+            flex-direction: column;
+            height: 100%;       
         }
+        
 
         .mystery-card::before {
             content: '';
@@ -215,10 +220,12 @@
         }
 
         .price {
+            margin-top: auto;
+
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--accent);
-            margin: 15px 0;
+            margin-bottom: 15px;
             display: block;
         }
 

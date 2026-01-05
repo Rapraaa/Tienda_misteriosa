@@ -1,0 +1,227 @@
+{% extends "index.html" %}
+
+{% block contenido %}
+
+<div class="container detail-container">
+    
+    <a href="{% url 'home' %}" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+
+    <div class="glass-panel detail-grid">
+        <div class="visual-side">
+            {% if caja.imagen %}
+                <img src="{{ caja.imagen.url }}" alt="{{ caja.nombre }}" class="box-image">
+            {% else %}
+                <div class="floating-icon-large">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+            {% endif %}
+            
+            <div class="glow-effect"></div>
+        </div>
+
+        <div class="info-side">
+            <h1 class="box-title">{{ caja.nombre }}</h1>
+            
+            <div class="tags-container">
+                {% for categoria in caja.allowed_categories.all %}
+                <span class="tag">{{categoria.nombre}}</span>
+                {% endfor %}
+            </div>
+
+            <p class="description">
+                {{ caja.descripcion }}
+            </p>
+
+            <div class="separator"></div>
+
+            <h3 class="subtitle">¿Qué podría contener?</h3>
+            <ul class="features-list">
+                <li><i class="fa-solid fa-check"></i> Artículos Gamer</li>
+                <li><i class="fa-solid fa-check"></i> Coleccionables Raros</li>
+                <li><i class="fa-solid fa-check"></i> Merch Oficial</li>
+            </ul>
+
+            <div class="price-action-area">
+                <div class="price-tag">
+                    <span class="currency">$</span>{{ caja.monthly_price}}
+                </div>
+                
+                <form action="{% url 'compra_exitosa' caja.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-lg btn-glow">
+                        Suscribirse Ahora <i class="fa-solid fa-rocket"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <p class="secure-text">
+                <i class="fa-solid fa-lock"></i> Pago procesado de forma segura con Stripe
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .detail-container {
+        padding-top: 120px;
+        padding-bottom: 50px;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .back-link {
+        position: absolute;
+        top: 100px;
+        left: 20px;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .back-link:hover { color: var(--highlight); transform: translateX(-5px); }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 30px;
+        overflow: hidden;
+        width: 100%;
+        max-width: 1000px;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* --- Visual Side --- */
+    .visual-side {
+        background: linear-gradient(135deg, rgba(106, 0, 244, 0.1), rgba(0, 0, 0, 0));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 400px;
+    }
+
+    .floating-icon-large {
+        font-size: 8rem;
+        background: -webkit-linear-gradient(var(--highlight), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: float 6s infinite ease-in-out;
+        z-index: 2;
+    }
+
+    .glow-effect {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: var(--primary);
+        filter: blur(80px);
+        opacity: 0.3;
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    /* --- Info Side --- */
+    .info-side {
+        padding: 50px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .box-title {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        line-height: 1.1;
+    }
+
+    .tags-container { margin-bottom: 20px; }
+    .tag {
+        background: rgba(255,255,255,0.1);
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        margin-right: 10px;
+        color: var(--highlight);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+    }
+
+    .description {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .separator {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        margin: 20px 0;
+    }
+
+    .subtitle { font-size: 1.1rem; margin-bottom: 15px; color: var(--text-main); }
+
+    .features-list {
+        list-style: none;
+        margin-bottom: 30px;
+    }
+    .features-list li {
+        margin-bottom: 10px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+    }
+    .features-list i {
+        color: var(--accent);
+        margin-right: 10px;
+    }
+
+    /* --- Precio y Botón --- */
+    .price-action-area {
+        margin-top: auto; /* Empuja esto al fondo */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .price-tag {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--highlight);
+    }
+    .currency { font-size: 1.5rem; color: var(--text-main); margin-right: 5px;}
+
+    .btn-lg {
+        padding: 15px 30px;
+        font-size: 1.1rem;
+        flex-grow: 1; /* El botón ocupa el espacio restante */
+        text-align: center;
+    }
+
+    .secure-text {
+        margin-top: 15px;
+        font-size: 0.8rem;
+        color: #555;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .detail-grid { grid-template-columns: 1fr; }
+        .visual-side { min-height: 250px; }
+        .info-side { padding: 30px; }
+        .price-action-area { flex-direction: column; text-align: center; }
+        .btn-lg { width: 100%; }
+    }
+</style>
+
+{% endblock %}

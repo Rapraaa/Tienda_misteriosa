@@ -5,9 +5,10 @@ from django.utils import timezone
 # Create your models here.
 class Producto(models.Model):#TODO Explicar para que es el models.Model
     nombre = models.CharField(max_length=50)
-    categoria = models.ForeignKey('categoria', related_name="productos", on_delete=models.PROTECT )
+    categoria = models.ManyToManyField('categoria', related_name="productos") #cambiamos a many2many para que peuda tener varias categorias
     #el related name es la forma en que se apoda la forma en que llamaremos desde el padre, es decir categoria
     #productos, es decir los hijos
+    valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     def __str__(self):
         return self.nombre
@@ -18,7 +19,6 @@ class Categoria(models.Model):
 
     def __str__(self):
         return self.nombre
-
 
 class Mystery_Box(models.Model):
     nombre = models.CharField(max_length=50)
