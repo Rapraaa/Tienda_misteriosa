@@ -1,0 +1,101 @@
+{% extends "index.html" %} {% block contenido %}
+<div class="container" style="margin-top: 120px; max-width: 700px">
+    <h2 class="section-title">Registrar Nuevo Producto</h2>
+
+    <div class="mystery-card" style="text-align: left">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">{{ form.nombre.label_tag }} {{ form.nombre }}</div>
+
+            <div class="form-group">{{ form.valor.label_tag }} {{ form.valor }}</div>
+
+            <div class="form-group">{{ form.stock.label_tag }} {{ form.stock }}</div>
+
+            <div class="form-group">
+                <label class="glow-label">{{ form.categoria.label }}</label>
+
+                <div class="checkbox-grid">
+                    {% for checkbox in form.categoria %}
+                    <div class="checkbox-item">
+                        {{ checkbox.tag }}
+                        <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Estilos Generales del Form */
+    .form-group {
+        margin-bottom: 25px;
+    }
+    label {
+        color: var(--highlight);
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    /* Inputs de Texto y Numero */
+    .cyber-input {
+        width: 100%;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--primary);
+        color: white;
+        border-radius: 8px;
+    }
+    .cyber-input:focus {
+        outline: none;
+        box-shadow: 0 0 15px var(--primary);
+    }
+
+    /* --- ESTILO DE LOS CHECKBOXES --- */
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Columnas automáticas */
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    /* Ocultamos el cuadrito feo original del checkbox */
+    .checkbox-item input[type="checkbox"] {
+        display: none;
+    }
+
+    /* Estilizamos la etiqueta para que parezca un botón */
+    .checkbox-item label {
+        display: block;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: var(--text-muted);
+        margin: 0; /* Quitamos margen interno */
+    }
+
+    /* CUANDO ESTÁ SELECCIONADO (El input checked afecta al label vecino) */
+    .checkbox-item input[type="checkbox"]:checked + label {
+        background: rgba(242, 0, 137, 0.2); /* Fondo rosado */
+        border-color: var(--accent);
+        color: white;
+        box-shadow: 0 0 10px var(--accent);
+        font-weight: bold;
+    }
+
+    .checkbox-item label:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}
