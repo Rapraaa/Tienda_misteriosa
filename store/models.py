@@ -42,9 +42,15 @@ class Suscripcion(models.Model):
         ('P', 'Pago_pendiente')
     ))
     fecha_proximo_pago = models.DateField(default = timezone.now)
-class Envios(models.Model):
+    #TODO crear fecha de inicio
+class Envio(models.Model):
     suscripcion = models.ForeignKey('suscripcion', related_name='envio', on_delete=models.PROTECT)
-    fecha_envio = models.DateField(default = timezone.now)
+    fecha_envio = models.DateField(default = timezone.now) #investigar auto_now_add=True
     productos = models.ManyToManyField('producto', related_name='envios')
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
+    estado = models.CharField(choices=[
+        ('P', 'Preparando caja'),
+        ('E', 'Enviado'),
+        ('R', 'Recibido')
+    ], default='P')
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) #TODO esto no lo debe ver el usuario
+    numero_guia = models.CharField(max_length=50, blank=True, null=True)

@@ -1,10 +1,7 @@
-{% extends "index.html" %}
-
-{% block contenido %}
+{% extends "index.html" %} {% block contenido %}
 
 <section class="success-container">
     <div class="success-card">
-        
         <div class="confetti-bg"></div>
 
         <div class="icon-wrapper">
@@ -12,10 +9,11 @@
         </div>
 
         <h1 class="gradient-text">¡Pago Exitoso!</h1>
-        
+
         <p class="success-message">
-            Tu suscripción a la <strong>{{ caja_nombre|default:"Caja Misteriosa" }}</strong> ha sido activada correctamente.
-            <br>
+            Tu suscripción a la <strong>{{ caja_nombre|default:"Caja Misteriosa" }}</strong> ha sido activada
+            correctamente.
+            <br />
             Prepárate para recibir lo inesperado.
         </p>
 
@@ -32,8 +30,7 @@
 
         <div class="actions">
             <a href="{% url 'home' %}" class="btn btn-primary">Volver al Inicio</a>
-            </div>
-
+        </div>
     </div>
 </section>
 
@@ -89,10 +86,12 @@
         margin-bottom: 40px;
         line-height: 1.6;
     }
-    .success-message strong { color: white; }
+    .success-message strong {
+        color: white;
+    }
 
     .order-details {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         padding: 20px;
         border-radius: 15px;
         margin-bottom: 40px;
@@ -106,10 +105,15 @@
         font-size: 0.9rem;
         color: var(--text-muted);
     }
-    .detail-row:last-child { margin-bottom: 0; }
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
 
-    .mono { font-family: monospace; color: var(--highlight); }
-    
+    .mono {
+        font-family: monospace;
+        color: var(--highlight);
+    }
+
     .status-badge {
         background: rgba(0, 255, 136, 0.2);
         color: #96c93d;
@@ -121,14 +125,25 @@
 
     /* Animaciones */
     @keyframes slideUp {
-        from { opacity: 0; transform: translateY(50px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     @keyframes popIn {
-        from { opacity: 0; transform: scale(0); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+            opacity: 0;
+            transform: scale(0);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
-
 </style>
 
 {% endblock %}

@@ -1,11 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 from .models import Mystery_Box
+from django.contrib.auth.decorators import login_required, permission_required
 from .models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from .forms import ProductoForm, CajaForm #imprtamos el form que hicimos
-
+import stripe #! para la api de stripe
+from django.conf import settings #! para las llaves del stripe
+from django.shortcuts import redirect #para redigirir a la api
 # Create your views here.
 def home(request):
     cajitas= Mystery_Box.objects.all()
@@ -31,11 +34,13 @@ class CajaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
     template_name = 'store/templates/CajaUpdateCreateView.html'
     success_url = reverse_lazy('home')
 
+#!TODO  Poder activar y desactivar una caja
+
 
 def simulacion(request):
     pass
 
-def compra_exitosa(request, id):
+def compra_exitosa(request, id): #TODO falta que se cree la caja, no hace nada por hora
     box = get_object_or_404(Mystery_Box, id=id)
     return render(request, "store/templates/pago_exitoso.html", {'caja' : box})
 
@@ -59,3 +64,107 @@ class ProductoUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin
     template_name = 'store/templates/ProductoUpdateView.html'
     success_url = reverse_lazy('productos')
     #Todo permission_required = 1231
+
+
+class SuscripcionListView(LoginRequiredMixin, ListView): #todo esto ed envios global, queremos que cada usuario pueda ver su propio historial
+    model = Suscripcion
+    template_name = 'store/templates/SuscripcionListView.html'
+    context_object_name = 'suscripciones'
+    
+    def get_queryset(self): #probar este luego
+        usuario_actual = self.request.user
+        if usuario_actual.has_perm('store.view_suscripcion'): #TODO en los modelos crear permisos personalizados para lo que ocupemos
+            return Suscripcion.objects.all().order_by('-id')
+        else:
+            return Suscripcion.objects.filter(usuario=self.request.user).order_by('-id')
+    #sobreescribimos el metodo original que el orginal trae todos, ese solo trae el del usuario
+    #? self.request tiene toda la informacion de la peticion actual (ip, cookies, usuario, etc) el user es el que paso el login requured
+    #el -id es para que se ordene de forma descendente, y se vea las mas nuevas primero
+
+#TODO direccion de envio y de contacto de el usuario
+#TODO logistica de envios, que los administradores vean los pendientes, los armen, los envien y den el codigo de envio
+
+#api 
+#*  IMPORTANTE ACA DECIRLE CUAL ES LA KEY, LA SECRETA, SIN ESTO DARA ERROR
+stripe.api_key = settings.STRIPE_SECRET_KEY
+def crear_checkout_session(request, id):
+    caja = get_object_or_404(Mystery_Box, id=id) #vemos que caja quiere comprar
+    dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
+    #! DOCUMENTACION STRIPE API https://docs.stripe.com/api/checkout/sessions/create
+
+    try:
+        # Creamos la sesión de pago en Stripe, es la sesion temporal donde pone sus datos y tal y se decide si pasa(pagA) o no
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'], #tipo de pago, hay mas como cripto por ejemplo
+            line_items=[ #el carrito de compras
+                {
+                    # Definimos el producto
+                    'price_data': { #esto son los datos de los precios
+                        'currency': 'usd', #dolares
+                        'unit_amount': int(caja.monthly_price * 100), # Stripe usa centavos (25.00 -> 2500)
+                        'product_data': { #datos del producto
+                            'name': f"Suscripción: {caja.nombre}", #el nombre
+                            'description': caja.descripcion, #descripcionn
+                        },
+                    },
+                    'quantity': 1, #cantidad
+                },
+            ],
+            mode='payment', # Usamos 'payment' para simplificar (cobro único inicial), #!hay el mensual pero toca configurar mucha vaina en el stripe
+                # si paga bien, Stripe lo manda a esta URL que es la vista de exito
+            success_url=f'{dominio}/compra-exitosa/{caja.id}/?session_id={{CHECKOUT_SESSION_ID}}',
+                
+                # si se arrepiente y cancela, vuelve al detalle de la caja
+            cancel_url=f'{dominio}/caja/{caja.id}/',
+        )
+            
+            # Redirigimos al usuario a la URL que Stripe nos dio
+        return redirect(checkout_session.url)
+            
+    except Exception as e:
+        return render(request, 'store/templates/error_pago.html', {'error': str(e)})
+    
+
+
+
+@login_required
+def compra_exitosa(request, id):
+    # Validamos que venga de Stripe por temas de seguridad
+    session_id = request.GET.get('session_id')
+    if not session_id:
+         #si no viene de stipe directo pal home
+        return redirect('home')
+    #obtenemos el objeto
+    caja = get_object_or_404(Mystery_Box, id=id)
+    
+    #! LÓGICA DE NEGOCIO: CREAR SUSCRIPCIÓN Y PRIMER ENVÍO
+    #?Usamos get_or_create para que si recarga la página no se cobre doble
+    suscripcion, created = Suscripcion.objects.get_or_create( #si hay suscripcion pq recargo pagina no pasa nada, 
+        #sino la crea, esto pq tuvimos un fallo que si recargabamos se repetia la suscripcion 
+        usuario=request.user, 
+        caja=caja,
+        estado='A', #activo
+        defaults={'fecha_proximo_pago': timezone.now() + timedelta(days=30)} #1 mes pal proximo pago
+    )
+
+    if created: #si es que es nueva la suscripcion, osea no se actualizo la pagina
+        #generamos el primer envio
+        Envio.objects.create(
+            suscripcion=suscripcion,
+            estado='P' # Preparando
+        )
+        #TODO aca toca llamar al algoritmo que aun no ahcemos en modelos de los productos random
+
+    return render(request, "store/templates/pago_exitoso.html", {'caja': caja})
+
+
+#todo al estar por acabar un boton para renovar suscripcion
+#todo para que tenga un poco mas de sentido que mande varias cajas de la misma por semana, pero que pague el mes, y que estas tengan un mini descuento
+#todo que tambien se pueda comprar solo una caja, un poco mas caro que la suscripcion
+#todo que la id de transaccion al completar el pago sea real xd
+#todo IMPORTANTE que no deje suscribirse a una caja ya suscrita, pq intente y me cobro 2 veces xd, obvio solo se hace 1 suscripcion
+#todo mejorar el detalle de la caja
+#todo la logistica de envios, que vea las cajas sin enviar pendientes, formulario para poner numero de guia, y cambiar el estado
+#todo las funciones para calcular las coas en models
+#todo algoritmo de suerte
+#todo crear una pagina para simular el rastreo del pedido (fake tracker)

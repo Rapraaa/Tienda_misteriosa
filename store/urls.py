@@ -13,4 +13,8 @@ urlpatterns = [
     path('producto/editar/<int:pk>', ProductoUpdateView.as_view(), name='editar_producto'), #EN MIXINS ES PK NO ID
     path('caja/nuevo/', CajaCreateView.as_view(), name='crear_caja'),
     path('caja/editar/<int:pk>', CajaUpdateView.as_view(), name='editar_caja'),
+    path('suscripciones/', SuscripcionListView.as_view(), name='suscripciones'),
+    path('checkout/<int:id>/', crear_checkout_session, name='checkout'),
+    path('compra-exitosa/<int:id>/', compra_exitosa, name='compra_exitosa'),
+
 ]

@@ -48,7 +48,7 @@
             <div class="price-action-area">
                 <div class="price-tag"><span class="currency">$</span>{{ caja.monthly_price}}</div>
 
-                <form action="{% url 'compra_exitosa' caja.id %}" method="POST">
+                <form action="{% url 'checkout' caja.id %}" method="POST">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary btn-lg btn-glow">
                         Suscribirse Ahora <i class="fa-solid fa-rocket"></i>
