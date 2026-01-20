@@ -1,0 +1,230 @@
+{% extends 'index.html' %} {% block contenido %}
+<style>
+    /* Estilos inputs */
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 20px;
+        font-family: "Poppins", sans-serif;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--highlight);
+        font-weight: 600;
+    }
+
+    /* Item de empaque */
+    .packing-item {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 3px solid var(--accent);
+        transition: all 0.3s;
+    }
+
+    /* Cuando se marca el checkbox, el item brilla verde */
+    .packing-item.checked {
+        border-left-color: var(--success);
+        background: rgba(0, 184, 148, 0.1);
+    }
+
+    /* Checkbox personalizado */
+    .check-insumo {
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        accent-color: var(--success);
+    }
+
+    /* Botón deshabilitado */
+    button:disabled {
+        background: #555 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        color: #aaa !important;
+    }
+
+    /* Alerta de errores generales del form */
+    .alert-danger {
+        background: rgba(214, 48, 49, 0.2);
+        border: 1px solid var(--danger);
+        color: #ff7675;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container" style="padding-top: 120px; padding-bottom: 50px">
+    <div style="margin-bottom: 30px">
+        <h2>Despachando Envio <span style="color: var(--highlight)">#{{ object.id }}</span></h2>
+        <p>Cliente: <strong>{{ object.suscripcion.usuario.username }}</strong></p>
+    </div>
+
+    {% if form.non_field_errors %}
+    <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px">
+        <div style="background: var(--glass); padding: 30px; border-radius: 20px; border: var(--border-glow)">
+            <h3 style="margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px">
+                <i class="fa-solid fa-clipboard-list"></i> Lista de Verificación
+            </h3>
+
+            <p style="font-size: 0.9rem; color: var(--accent); margin-bottom: 20px">
+                <i class="fa-solid fa-hand-point-right"></i> Marca todos los items conforme los metes a la caja para
+                desbloquear el envío.
+            </p>
+
+            {% for producto in items_a_empacar %}
+            <div class="packing-item" id="card-{{ producto.id }}">
+                <div style="flex-grow: 1">
+                    <h5 style="margin: 0; font-size: 1rem">{{ producto.nombre }}</h5>
+                    <small style="color: var(--text-muted)">ID: {{ producto.id }}</small>
+                </div>
+                <div>
+                    <input
+                        type="checkbox"
+                        class="check-insumo"
+                        onchange="verificarPacking(this, 'card-{{ producto.id }}')"
+                    />
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert-danger">¡ALERTA! Esta caja no tiene productos asignados.</div>
+            {% endfor %}
+
+            <div
+                style="
+                    margin-top: 40px;
+                    background: rgba(0, 0, 0, 0.3);
+                    padding: 20px;
+                    border-radius: 15px;
+                    border: 1px dashed rgba(255, 255, 255, 0.1);
+                "
+            >
+                <h6
+                    style="
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                        font-size: 0.8rem;
+                        letter-spacing: 1px;
+                        margin-bottom: 15px;
+                    "
+                >
+                    <i class="fa-solid fa-coins"></i> Resumen Financiero
+                </h6>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px">
+                    <span>Ingreso Suscripción:</span>
+                    <span style="color: var(--success); font-family: monospace">+${{ finanzas.pagado }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between">
+                    <span>Costo Mercancía:</span>
+                    <span style="color: var(--danger); font-family: monospace">-${{ finanzas.costo }}</span>
+                </div>
+                <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 10px 0" />
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem">
+                    <span>Margen:</span>
+                    <span
+                        style="color: {% if finanzas.es_rentable %}var(--highlight){% else %}var(--danger){% endif %}; font-family: monospace;"
+                    >
+                        ${{ finanzas.margen }}
+                    </span>
+                </div>
+                {% if not finanzas.es_rentable %}
+                <small style="color: var(--danger); display: block; margin-top: 5px"
+                    >⚠️ Estás perdiendo dinero en esta caja.</small
+                >
+                {% endif %}
+            </div>
+        </div>
+
+        <div
+            style="
+                background: var(--glass);
+                padding: 30px;
+                border-radius: 20px;
+                border: var(--border-glow);
+                height: fit-content;
+            "
+        >
+            <h3 style="margin-bottom: 20px; color: var(--highlight)">
+                <i class="fa-solid fa-paper-plane"></i> Finalizar
+            </h3>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label>Número de Guía</label>
+                    {{ form.numero_guia }}
+                    <small style="color: var(--danger)">{{ form.numero_guia.errors }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Estado</label>
+                    {{ form.estado }}
+                    <small style="color: var(--danger)">{{ form.estado.errors }}</small>
+                </div>
+
+                <div style="display: flex; gap: 10px">
+                    <a
+                        href="{% url 'envios' %}"
+                        class="btn"
+                        style="background: #444; color: white; flex: 1; text-align: center"
+                    >
+                        Cancelar
+                    </a>
+
+                    <button type="submit" id="btn-enviar" class="btn btn-primary" style="flex: 2" disabled>
+                        <i class="fa-solid fa-lock"></i> Completar Packing
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function verificarPacking(checkbox, cardId) {
+        const card = document.getElementById(cardId);
+        if (checkbox.checked) {
+            card.classList.add("checked");
+        } else {
+            card.classList.remove("checked");
+        }
+        validarBoton();
+    }
+
+    function validarBoton() {
+        const totalItems = document.querySelectorAll(".check-insumo").length;
+        const marcados = document.querySelectorAll(".check-insumo:checked").length;
+        const btn = document.getElementById("btn-enviar");
+
+        if (totalItems === 0) {
+            btn.disabled = true;
+            btn.innerHTML = "<i class='fa-solid fa-ban'></i> Caja Vacía";
+            return;
+        }
+
+        if (totalItems === marcados) {
+            btn.disabled = false;
+            btn.innerHTML = "Confirmar Envío <i class='fa-solid fa-rocket'></i>";
+        } else {
+            btn.disabled = true;
+            btn.innerHTML = `<i class='fa-solid fa-lock'></i> Faltan ${totalItems - marcados} items`;
+        }
+    }
+
+    validarBoton();
+</script>
+{% endblock %}

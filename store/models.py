@@ -54,3 +54,8 @@ class Envio(models.Model):
     ], default='P')
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) #TODO esto no lo debe ver el usuario
     numero_guia = models.CharField(max_length=50, blank=True, null=True)
+
+#todo que valga el boton de cancelar y todos los botones
+#todo CONCENTRARNOS AHORITA EN NO AGREGAR NADA NUEVO, SOLO ARREGLAR Y QUE TODO SIRVA BIEN DE LO QUE YA TENEMOS
+#todo no deberia poder yo cambiar a estado recibido antes de enviar, y el recibido deberia cambiarse automaticamente con el fake traker
+#todo poder desactivar cajas

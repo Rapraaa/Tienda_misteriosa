@@ -16,5 +16,7 @@ urlpatterns = [
     path('suscripciones/', SuscripcionListView.as_view(), name='suscripciones'),
     path('checkout/<int:id>/', crear_checkout_session, name='checkout'),
     path('compra-exitosa/<int:id>/', compra_exitosa, name='compra_exitosa'),
+    path('envios/', EnviosListView.as_view(), name='envios'),
+    path('despachar/<int:pk>/', EnviosUpdateView.as_view(), name='despachar_envio'),
 
 ]

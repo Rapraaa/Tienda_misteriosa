@@ -5,7 +5,7 @@ from .models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
-from .forms import ProductoForm, CajaForm #imprtamos el form que hicimos
+from .forms import ProductoForm, CajaForm, EnvioDespachoForm #imprtamos el form que hicimos
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
@@ -186,3 +186,42 @@ def compra_exitosa(request, id):
 #TODO PORDER CREAR CATEGORIAS DESDE LA PARTE DE CREAR PRODUCTO
 
 #todo api para los productos
+
+
+class EnviosListView(ListView):
+    model = Envio
+    template_name = 'store/templates/EnviosListView.html'
+    context_object_name = 'envios'
+
+    def get_queryset(self):
+        # Filtramos solo lo que está en preparacion
+        # Usamos select_related para traer los datos del usuario y la caja de una vez
+        return Envio.objects.filter(estado='P').select_related('suscripcion__usuario', 'suscripcion__caja').order_by('fecha_envio')
+    
+
+class EnviosUpdateView(UpdateView):
+    model = Envio
+    form_class = EnvioDespachoForm
+    template_name = 'store/templates/EnviosUpdateView.html'
+    success_url = reverse_lazy('envios') # Redirige a la lista al terminar
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        envio = self.object
+        
+        #enviamos los productosque hay que empacar
+        context['items_a_empacar'] = envio.productos.all()
+        
+        #calcula el margen de ganancia o perdida
+        precio_pagado = envio.suscripcion.caja.monthly_price
+        costo_real = envio.valor_total
+        margen = precio_pagado - costo_real
+        
+        context['finanzas'] = {
+            'pagado': precio_pagado,
+            'costo': costo_real,
+            'margen': margen,
+            'es_rentable': margen > 0
+        }
+        
+        return context

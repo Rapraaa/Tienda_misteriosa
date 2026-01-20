@@ -1,0 +1,88 @@
+{% extends 'index.html' %} {% block contenido %}
+<div class="container" style="padding-top: 120px; min-height: 80vh">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px">
+        <div>
+            <h1 style="font-weight: 800; font-size: 2.5rem">
+                Centro de <span style="color: var(--highlight)">Comando</span>
+            </h1>
+            <p style="color: var(--text-muted)">Logística y Despachos</p>
+        </div>
+        <div
+            style="
+                background: var(--glass);
+                padding: 15px 25px;
+                border-radius: 15px;
+                border: var(--border-glow);
+                text-align: center;
+            "
+        >
+            <span style="font-size: 2rem; font-weight: bold; color: var(--accent)">{{ envios|length }}</span>
+            <span style="display: block; font-size: 0.8rem; text-transform: uppercase">Pendientes</span>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto">
+        <table class="mysterio-table">
+            <thead>
+                <tr>
+                    <th>ID Envio</th>
+                    <th>Usuario</th>
+                    <th>Caja / Suscripción</th>
+                    <th>Fecha Solicitud</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for envio in envios %}
+                <tr>
+                    <td style="font-family: monospace; color: var(--text-muted)">#{{ envio.id }}</td>
+                    <td style="font-weight: 600">
+                        <i class="fa-solid fa-user-astronaut" style="margin-right: 8px; color: var(--highlight)"></i>
+                        {{ envio.suscripcion.usuario.username }}
+                    </td>
+                    <td>
+                        <span style="color: var(--primary)">{{ envio.suscripcion.caja.nombre }}</span>
+                    </td>
+                    <td>{{ envio.fecha_envio|date:"d M Y" }}</td>
+                    <td>
+                        <span
+                            style="
+                                padding: 5px 12px;
+                                background: rgba(255, 193, 7, 0.2);
+                                color: #ffc107;
+                                border-radius: 20px;
+                                font-size: 0.85rem;
+                                border: 1px solid rgba(255, 193, 7, 0.3);
+                            "
+                        >
+                            <i class="fa-solid fa-clock"></i> Preparando
+                        </span>
+                    </td>
+                    <td>
+                        <a
+                            href="{% url 'despachar_envio' envio.id %}"
+                            class="btn btn-primary"
+                            style="padding: 8px 20px; font-size: 0.8rem"
+                        >
+                            <i class="fa-solid fa-dolly"></i> Despachar
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 50px">
+                        <i
+                            class="fa-solid fa-check-circle"
+                            style="font-size: 3rem; color: var(--success); margin-bottom: 20px"
+                        ></i>
+                        <h3>¡Todo al día!</h3>
+                        <p style="color: var(--text-muted)">No hay envíos pendientes de despacho.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

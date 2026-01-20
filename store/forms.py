@@ -50,3 +50,34 @@ class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo s
             'allowed_categories': 'Categorias incluidas',
             'descripcion': 'Descripción',
         }
+
+
+from django import forms
+from .models import Envio
+
+class EnvioDespachoForm(forms.ModelForm):
+    class Meta:
+        model = Envio
+        fields = ['numero_guia', 'estado']
+        widgets = {
+            'numero_guia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: FEDEX-123456'}),
+            'estado': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        estado = cleaned_data.get('estado')
+        guia = cleaned_data.get('numero_guia')
+        
+        # self.instance se refiere al objeto Envio que estamos editando
+        if self.instance.productos.count() == 0:
+            raise forms.ValidationError("ERROR: Esta caja está vacía. Ejecuta lllena la caja antes de enviar.")
+
+        # Si pone guía, TIENE que poner Enviado. Si pone Enviado, TIENE que poner guía.
+        if guia and estado == 'P':
+            self.add_error('estado', 'ADVERTENCIA: Tienes un número de guía, debes cambiar el estado a "Enviado" para continuar.')
+        
+        if estado == 'E' and not guia:
+            self.add_error('numero_guia', 'ADVERTENCIA: No puedes marcar como "Enviado" sin un número de guía.')
+
+        return cleaned_data
