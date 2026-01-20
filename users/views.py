@@ -15,3 +15,4 @@ def registro(request):
     else:
         form = UserCreationForm() #parentesis? para instanciarlo
     return render(request, 'users/templates/registration/registro.html', {'form':form}) #mandamos como parametro el formulario, como es eso de mandar
+

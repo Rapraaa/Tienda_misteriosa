@@ -302,3 +302,15 @@ def rastrear_pedido(request):
 
 #Todo tema imopuestos, precio de envio, que si el iva cambia, los registros nuevos no pueden cambiar el iva, precio a los envios de usa
 
+@login_required
+def perfil(request):
+
+    mis_envios = Envio.objects.filter( #filtarmos envios que la suscripcion sea el usuario actual
+        suscripcion__usuario=request.user
+    ).select_related('suscripcion__caja').order_by('-id') #ordenamos de mas recientes a mas viejos
+    
+    return render(request, 'store/templates/profile.html', {
+        'mis_envios': mis_envios
+    })
+
+#todo si se llama domenica puede usar el cupon de kamasutra
