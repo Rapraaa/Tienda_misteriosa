@@ -9,6 +9,7 @@ from .forms import ProductoForm, CajaForm #imprtamos el form que hicimos
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
+from .utils import generar_caja
 # Create your views here.
 def home(request):
     cajitas= Mystery_Box.objects.all()
@@ -40,9 +41,6 @@ class CajaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
 def simulacion(request):
     pass
 
-def compra_exitosa(request, id): #TODO falta que se cree la caja, no hace nada por hora
-    box = get_object_or_404(Mystery_Box, id=id)
-    return render(request, "store/templates/pago_exitoso.html", {'caja' : box})
 
 class ProductoListView(LoginRequiredMixin, ListView): 
     queryset = Producto.objects.prefetch_related('categoria') #prefetch related es para many to many
@@ -92,6 +90,16 @@ def crear_checkout_session(request, id):
     dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
     #! DOCUMENTACION STRIPE API https://docs.stripe.com/api/checkout/sessions/create
 
+
+    suscripcion_existente = Suscripcion.objects.filter( #revisamos que no se pueda suscribir de neuvo a algo que ya esta
+        usuario=request.user,
+        caja=caja,
+        estado='A' # Solo nos importa si está activa
+    ).exists()
+
+
+    if suscripcion_existente:
+            return redirect('home') # TODO: Redirigir a una página que diga que ya tiene esa suscripcion o caka
     try:
         # Creamos la sesión de pago en Stripe, es la sesion temporal donde pone sus datos y tal y se decide si pasa(pagA) o no
         checkout_session = stripe.checkout.Session.create(
@@ -149,14 +157,21 @@ def compra_exitosa(request, id):
 
     if created: #si es que es nueva la suscripcion, osea no se actualizo la pagina
         #generamos el primer envio
-        Envio.objects.create(
+        nuevo_envio = Envio.objects.create(
             suscripcion=suscripcion,
-            estado='P' # Preparando
+            estado='P', # Preparando
         )
+        generar_caja(nuevo_envio)
         #TODO aca toca llamar al algoritmo que aun no ahcemos en modelos de los productos random
+    else:
+        # Si recargó la página, buscamos el ulitmo envio de suscripcoon
+        nuevo_envio = Envio.objects.filter(suscripcion=suscripcion).last()
 
-    return render(request, "store/templates/pago_exitoso.html", {'caja': caja})
-
+    # CAMBIO IMPORTANTE: Pasamos 'envio' al contexto, no solo 'caja'
+    return render(request, "store/templates/pago_exitoso.html", {
+            'caja': caja,
+            'envio': nuevo_envio 
+        })
 
 #todo al estar por acabar un boton para renovar suscripcion
 #todo para que tenga un poco mas de sentido que mande varias cajas de la misma por semana, pero que pague el mes, y que estas tengan un mini descuento
@@ -168,3 +183,6 @@ def compra_exitosa(request, id):
 #todo las funciones para calcular las coas en models
 #todo algoritmo de suerte
 #todo crear una pagina para simular el rastreo del pedido (fake tracker)
+#TODO PORDER CREAR CATEGORIAS DESDE LA PARTE DE CREAR PRODUCTO
+
+#todo api para los productos

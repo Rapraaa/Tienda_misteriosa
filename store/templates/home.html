@@ -1,66 +1,64 @@
-{% extends "index.html" %}
-{% block contenido %}
-    <header class="hero">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="hero-content">
-            <i class="fa-solid fa-gift floating-box-icon"></i>
-            <h1>El misterio te <br><span>está esperando</span></h1>
-            <p>Cajas curadas con los mejores artículos Tech, Gamer y Lifestyle. <br>Tú eliges la temática, nosotros te sorprendemos.</p>
-            <a href="#cajas" class="btn btn-primary">Abrir una Caja</a>
-        </div>
-    </header>
+{% extends "index.html" %} {% block contenido %}
 
-    <section id="cajas" class="container">
-        <h2 class="section-title">Nuestras Mystery Boxes</h2>
-        
-        <div class="products-grid">
-            {%for box in boxes%}
-            <div class="mystery-card">
-                <i class="fa-solid fa-gamepad card-icon"></i>
-                <h3>{{box.nombre}}</h3>
-                <p>{{box.descripcion}}</p>
-                <span class="price">${{box.monthly_price}}</span>
-                <a href="{% url 'box' box.id %}" class="btn btn-primary">Comprar Ahora</a>
-            </div> 
-            {% endfor %}
-{% comment %}
-            <div class="mystery-card">
-                <i class="fa-solid fa-robot card-icon"></i>
-                <h3>Tech Gadgets</h3>
-                <p>Lo último en gadgets, smart home y utilidades tech curiosas que no conocías.</p>
-                <span class="price">$29.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
+<header class="hero">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <div class="hero-content">
+        <i class="fa-solid fa-cube floating-box-icon"></i>
+        <h1>El Misterio <span>Te Llama</span></h1>
+        <p>Suscripciones mensuales de cajas sorpresa. ¿Te atreves a abrir una?</p>
+        <a href="#cajas" class="btn btn-primary">Ver Cajas <i class="fas fa-arrow-down"></i></a>
+    </div>
+</header>
+
+<section id="cajas" class="container">
+    <h2 class="section-title">Nuestras <span style="color: var(--highlight)">Cajas</span></h2>
+
+    <div class="products-grid">
+        {% for caja in boxes %}
+        <div class="mystery-card">
+            <div class="card-icon">
+                <i class="fa-solid fa-box-open"></i>
             </div>
 
-            <div class="mystery-card">
-                <i class="fa-solid fa-shirt card-icon"></i>
-                <h3>Streetwear Pack</h3>
-                <p>Ropa y accesorios de marcas urbanas. Hoodies, gorras y calcetines exclusivos.</p>
-                <span class="price">$39.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-             <div class="mystery-card">
-                <i class="fa-solid fa-dragon card-icon"></i>
-                <h3>Otaku Chest</h3>
-                <p>Figuras, mangas, snacks japoneses y accesorios de tus animes favoritos.</p>
-                <span class="price">$34.99</span>
-                <a href="#" class="btn btn-primary">Comprar Ahora</a>
-            </div>
-            {% endcomment %} 
-        </div>
-    </section>
-  
+            <h3>{{ caja.nombre }}</h3>
 
-    <footer>
-        <div class="container">
-            <div class="logo" style="margin-bottom: 20px; font-size: 1.5rem;">MYSTERIO</div>
-            <div class="socials">
-                <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                <a href="#"><i class="fa-brands fa-tiktok"></i></a>
-                <a href="#"><i class="fa-brands fa-twitter"></i></a>
-            </div>
-            <p style="color: var(--text-muted); font-size: 0.8rem;">&copy; 2024 Mysterio Box Co. Todos los derechos reservados.</p>
+            <p>{{ caja.descripcion|truncatechars:80 }}</p>
+
+            <span class="price">${{ caja.monthly_price }}</span>
+
+            <a href="{% url 'box' caja.id %}" class="btn btn-primary" style="width: 100%; margin-top: auto">
+                Ver Contenido
+            </a>
         </div>
-    </footer>
+        {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted)">
+            <h3><i class="fa-solid fa-ghost"></i> No hay cajas disponibles por ahora...</h3>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="funcionamiento" class="container" style="margin-bottom: 100px; text-align: center">
+    <h2 class="section-title">¿Cómo <span style="color: var(--accent)">Funciona?</span></h2>
+    <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 30px">
+        <div style="max-width: 300px">
+            <i class="fa-solid fa-hand-pointer" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px"></i>
+            <h3>1. Elige</h3>
+            <p style="color: var(--text-muted)">Selecciona la temática que más te intrigue.</p>
+        </div>
+        <div style="max-width: 300px">
+            <i class="fa-solid fa-credit-card" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px"></i>
+            <h3>2. Suscríbete</h3>
+            <p style="color: var(--text-muted)">Pago seguro mensual con Stripe.</p>
+        </div>
+        <div style="max-width: 300px">
+            <i class="fa-solid fa-truck-fast" style="font-size: 3rem; color: var(--highlight); margin-bottom: 20px"></i>
+            <h3>3. Recibe</h3>
+            <p style="color: var(--text-muted)">Una caja sorpresa cada mes en tu puerta.</p>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
