@@ -38,9 +38,6 @@ class CajaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
 #!TODO  Poder activar y desactivar una caja
 
 
-def simulacion(request):
-    pass
-
 
 class ProductoListView(LoginRequiredMixin, ListView): 
     queryset = Producto.objects.prefetch_related('categoria') #prefetch related es para many to many
@@ -90,7 +87,9 @@ def crear_checkout_session(request, id):
     dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
     #! DOCUMENTACION STRIPE API https://docs.stripe.com/api/checkout/sessions/create
 
-
+    if caja.estado != 'A': #validar que sea activa, sino con el link nos hacen la 13 14
+            # TODO Opcional: Mandar un mensaje de error con 'messages' de Django o alguna vista personalizada bien linda bacana sexy sensuala
+            return redirect('home')
     suscripcion_existente = Suscripcion.objects.filter( #revisamos que no se pueda suscribir de neuvo a algo que ya esta
         usuario=request.user,
         caja=caja,
@@ -225,3 +224,6 @@ class EnviosUpdateView(UpdateView):
         }
         
         return context
+    
+#todo validar al comprar la caja que no se puedda comprar si esta esta inactiva, ya que aunque el boton se bloquea si entro por el link pues pene
+#todo IMPORTANTISIMO, que en el home los usuarios vean solo las activas, solo alguien con permisos las inactivas

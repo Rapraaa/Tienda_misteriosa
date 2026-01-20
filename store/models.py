@@ -30,6 +30,10 @@ class Mystery_Box(models.Model):
     descripcion = models.CharField(max_length=250, blank=True, null=True)
     #DIFERENCIA DECIMALFIELD Y FLOATFIELT ES , el decimal siempre se debe usar para dinero, ya que floatfield no SIEMPRE es exacto
     #aveces 10.00 en decimal es 10.00000000001.
+    estado = models.CharField(max_length=20, choices=(
+        ('A', 'Activa'),
+        ('I', 'Inactivo')
+    ),default='A')
     def __str__(self):
         return f"Caja {self.nombre}"
 

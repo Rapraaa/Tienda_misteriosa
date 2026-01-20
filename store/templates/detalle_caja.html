@@ -18,10 +18,17 @@
 
         <div class="info-side">
             <div class="header-row">
-                <h1 class="box-title">{{ caja.nombre }}</h1>
+                <div class="title-group">
+                    <h1 class="box-title">{{ caja.nombre }}</h1>
+
+                    {% if caja.estado == 'A' %}
+                    <span class="status-badge active"><i class="fa-solid fa-circle"></i> Activa</span>
+                    {% else %}
+                    <span class="status-badge inactive"><i class="fa-solid fa-ban"></i> Inactivo</span>
+                    {% endif %}
+                </div>
 
                 {% if user.is_staff %}
-                <!-- todo permisos-->
                 <a href="{% url 'editar_caja' caja.pk %}" class="btn-edit-small">
                     <i class="fa-solid fa-pen-to-square"></i> Editar
                 </a>
@@ -48,12 +55,18 @@
             <div class="price-action-area">
                 <div class="price-tag"><span class="currency">$</span>{{ caja.monthly_price}}</div>
 
-                <form action="{% url 'checkout' caja.id %}" method="POST">
+                {% if caja.estado == 'A' %}
+                <form action="{% url 'checkout' caja.id %}" method="POST" style="flex-grow: 1">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary btn-lg btn-glow">
                         Suscribirse Ahora <i class="fa-solid fa-rocket"></i>
                     </button>
                 </form>
+                {% else %}
+                <button type="button" class="btn btn-disabled btn-lg" disabled>
+                    No Disponible <i class="fa-solid fa-lock"></i>
+                </button>
+                {% endif %}
             </div>
 
             <p class="secure-text"><i class="fa-solid fa-lock"></i> Pago procesado de forma segura con Stripe</p>
@@ -71,7 +84,6 @@
         justify-content: center;
         position: relative;
     }
-
     .back-link {
         position: absolute;
         top: 100px;
@@ -95,13 +107,11 @@
         max-width: 1000px;
         box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     }
-
     .detail-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
     }
 
-    /* --- Visual Side --- */
     .visual-side {
         background: linear-gradient(135deg, rgba(106, 0, 244, 0.1), rgba(0, 0, 0, 0));
         display: flex;
@@ -110,7 +120,6 @@
         position: relative;
         min-height: 400px;
     }
-
     .box-image {
         width: 80%;
         max-height: 80%;
@@ -118,7 +127,6 @@
         z-index: 2;
         filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
     }
-
     .floating-icon-large {
         font-size: 8rem;
         background: -webkit-linear-gradient(var(--highlight), var(--accent));
@@ -127,7 +135,6 @@
         animation: float 6s infinite ease-in-out;
         z-index: 2;
     }
-
     .glow-effect {
         position: absolute;
         width: 200px;
@@ -139,14 +146,12 @@
         z-index: 1;
     }
 
-    /* --- Info Side --- */
     .info-side {
         padding: 50px;
         display: flex;
         flex-direction: column;
     }
 
-    /* NUEVO: Header Row para alinear título y botón editar */
     .header-row {
         display: flex;
         justify-content: space-between;
@@ -154,15 +159,43 @@
         gap: 15px;
         margin-bottom: 15px;
     }
-
+    .title-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex-grow: 1;
+    }
     .box-title {
         font-size: 2.5rem;
         line-height: 1.1;
         margin: 0;
-        flex-grow: 1;
     }
 
-    /* NUEVO: Botón de editar sutil */
+    /* Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        width: fit-content;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    .status-badge.active {
+        background: rgba(0, 255, 136, 0.1);
+        color: #00ff88;
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+    }
+    .status-badge.inactive {
+        background: rgba(255, 56, 96, 0.1);
+        color: #ff3860;
+        border: 1px solid rgba(255, 56, 96, 0.3);
+    }
+
     .btn-edit-small {
         text-decoration: none;
         font-size: 0.9rem;
@@ -176,7 +209,6 @@
         align-items: center;
         gap: 8px;
     }
-
     .btn-edit-small:hover {
         border-color: var(--highlight);
         color: var(--highlight);
@@ -196,28 +228,24 @@
         margin-right: 10px;
         color: var(--highlight);
         border: 1px solid rgba(0, 212, 255, 0.2);
-        display: inline-block; /* Asegura que no se rompan feo */
+        display: inline-block;
         margin-bottom: 5px;
     }
-
     .description {
         color: var(--text-muted);
         line-height: 1.6;
         margin-bottom: 20px;
     }
-
     .separator {
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         margin: 20px 0;
     }
-
     .subtitle {
         font-size: 1.1rem;
         margin-bottom: 15px;
         color: var(--text-main);
     }
-
     .features-list {
         list-style: none;
         margin-bottom: 30px;
@@ -233,7 +261,6 @@
         margin-right: 10px;
     }
 
-    /* --- Precio y Botón --- */
     .price-action-area {
         margin-top: auto;
         display: flex;
@@ -242,7 +269,6 @@
         gap: 20px;
         flex-wrap: wrap;
     }
-
     .price-tag {
         font-size: 2.5rem;
         font-weight: 800;
@@ -257,10 +283,18 @@
     .btn-lg {
         padding: 15px 30px;
         font-size: 1.1rem;
-        flex-grow: 1;
         text-align: center;
+        width: 100%;
     }
 
+    .btn-disabled {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        cursor: not-allowed;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: none;
+        flex-grow: 1;
+    }
     .secure-text {
         margin-top: 15px;
         font-size: 0.8rem;
@@ -268,7 +302,6 @@
         text-align: center;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .detail-grid {
             grid-template-columns: 1fr;
@@ -288,11 +321,10 @@
         }
         .header-row {
             flex-direction: column;
-        } /* En móvil baja el botón editar */
+        }
         .btn-edit-small {
             align-self: flex-start;
         }
     }
 </style>
-
 {% endblock %}

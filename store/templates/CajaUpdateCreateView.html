@@ -13,14 +13,13 @@
 
         <div class="info-side">
             <h1 class="box-title">
-                <!-- asi se hace crear y editar en un html, si es que teiene pg es editar caja wao no?-->
                 {% if form.instance.pk %} Editar Caja: {{ form.instance.nombre }} {% else %} Nueva Caja Misteriosa
                 {%endif %}
             </h1>
 
             <div class="separator"></div>
 
-            <form method="post" class="creation-form">
+            <form method="post" class="creation-form" enctype="multipart/form-data">
                 {% csrf_token %} {% if form.non_field_errors %}
                 <div class="alert-error" style="margin-bottom: 20px">
                     <i class="fa-solid fa-circle-exclamation"></i>
@@ -48,6 +47,23 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="glow-label">{{ form.estado.label }}</label>
+                    <div class="radio-group-container">
+                        {% for radio in form.estado %}
+                        <div class="radio-option">
+                            {{ radio.tag }}
+                            <label for="{{ radio.id_for_label }}">
+                                <span class="radio-circle"></span>
+                                {{ radio.choice_label }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {{ form.estado.errors }}
+                    <small class="help-text">Si seleccionas "Inactivo", la caja no podrá ser comprada.</small>
+                </div>
+
+                <div class="form-group">
                     <label class="glow-label">{{ form.allowed_categories.label }}</label>
 
                     <div class="categories-grid">
@@ -65,8 +81,6 @@
                         Debes seleccionar al menos una categoría.
                     </div>
                     {% endif %}
-
-                    <small class="help-text">Selecciona qué categorías de productos incluirá esta caja.</small>
                 </div>
 
                 <div class="price-action-area" style="margin-top: 40px">
@@ -80,7 +94,7 @@
 </div>
 
 <style>
-    /* --- Estructura Base --- */
+    /* --- Estilos Generales --- */
     .detail-container {
         padding-top: 120px;
         padding-bottom: 50px;
@@ -90,7 +104,6 @@
         justify-content: center;
         position: relative;
     }
-
     .glass-panel {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(20px);
@@ -101,13 +114,12 @@
         max-width: 1100px;
         box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     }
-
     .detail-grid {
         display: grid;
         grid-template-columns: 40% 60%;
     }
 
-    /* --- Lado Izquierdo --- */
+    /* Visual Side */
     .visual-side {
         background: linear-gradient(135deg, rgba(106, 0, 244, 0.1), rgba(0, 0, 0, 0));
         display: flex;
@@ -116,7 +128,6 @@
         position: relative;
         min-height: 100%;
     }
-
     .floating-icon-large {
         font-size: 8rem;
         background: -webkit-linear-gradient(var(--highlight), var(--accent));
@@ -125,7 +136,6 @@
         animation: float 6s infinite ease-in-out;
         z-index: 2;
     }
-
     .glow-effect {
         position: absolute;
         width: 200px;
@@ -137,23 +147,20 @@
         z-index: 1;
     }
 
-    /* --- Lado Derecho (Formulario) --- */
+    /* Info Side */
     .info-side {
         padding: 50px;
     }
-
     .box-title {
         font-size: 2rem;
         margin-bottom: 10px;
         color: white;
     }
-
     .separator {
         height: 1px;
         background: rgba(255, 255, 255, 0.1);
         margin: 20px 0;
     }
-
     .form-group {
         margin-bottom: 25px;
     }
@@ -167,7 +174,6 @@
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-
     .help-text {
         display: block;
         color: var(--text-muted);
@@ -175,7 +181,7 @@
         margin-top: 5px;
     }
 
-    /* --- INPUTS --- */
+    /* Inputs */
     .cyber-input {
         width: 100%;
         padding: 15px;
@@ -186,19 +192,15 @@
         font-family: "Poppins", sans-serif;
         transition: 0.3s;
     }
-
     .cyber-input:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 15px rgba(242, 0, 137, 0.2);
         background: rgba(0, 0, 0, 0.5);
     }
-
-    /* Input con icono */
     .input-icon-wrapper {
         position: relative;
     }
-
     .input-icon {
         position: absolute;
         left: 15px;
@@ -206,22 +208,70 @@
         transform: translateY(-50%);
         color: var(--text-muted);
     }
-
     .input-icon-wrapper .cyber-input {
         padding-left: 40px;
     }
 
-    /* --- GRID DE CATEGORÍAS --- */
+    /* Radio Buttons (Estado) */
+    .radio-group-container {
+        display: flex;
+        gap: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .radio-option {
+        flex: 1;
+        position: relative;
+    }
+    .radio-option input[type="radio"] {
+        display: none;
+    }
+    .radio-option label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.05);
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .radio-option input[type="radio"]:checked + label {
+        background: rgba(0, 212, 255, 0.1);
+        border-color: var(--highlight);
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        font-weight: bold;
+    }
+    .radio-circle {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--text-muted);
+        transition: 0.3s;
+    }
+    .radio-option input[type="radio"]:checked + label .radio-circle {
+        background: var(--highlight);
+        border-color: var(--highlight);
+        box-shadow: 0 0 10px var(--highlight);
+    }
+
+    /* Categories Grid */
     .categories-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 10px;
     }
-
     .checkbox-item input[type="checkbox"] {
         display: none;
     }
-
     .checkbox-item label {
         display: block;
         padding: 10px;
@@ -235,7 +285,6 @@
         margin: 0;
         font-size: 0.85rem;
     }
-
     .checkbox-item input[type="checkbox"]:checked + label {
         background: rgba(0, 212, 255, 0.15);
         border-color: var(--highlight);
@@ -243,12 +292,10 @@
         box-shadow: 0 0 10px var(--highlight);
         font-weight: bold;
     }
-
     .checkbox-item label:hover {
         background: rgba(255, 255, 255, 0.1);
     }
 
-    /* --- ESTILOS DE ERROR (Limpios) --- */
     .alert-error {
         color: #ff3860;
         font-size: 0.9rem;
@@ -263,16 +310,6 @@
         gap: 10px;
     }
 
-    /* Lista de errores de Django standard */
-    ul.errorlist {
-        list-style: none;
-        padding: 0;
-        color: #ff3860;
-        margin-top: 5px;
-        font-size: 0.8rem;
-    }
-
-    /* --- Botones --- */
     .back-link {
         position: absolute;
         top: 100px;
@@ -293,7 +330,6 @@
         border-radius: 12px;
     }
 
-    /* Responsive */
     @media (max-width: 900px) {
         .detail-grid {
             grid-template-columns: 1fr;
@@ -301,15 +337,9 @@
         .visual-side {
             display: none;
         }
-        .glass-panel {
-            border-radius: 0;
-            border: none;
-            background: transparent;
-        }
         .info-side {
             padding: 20px 0;
         }
     }
 </style>
-
 {% endblock %}

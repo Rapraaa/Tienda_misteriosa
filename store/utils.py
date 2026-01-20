@@ -9,6 +9,8 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
 
     productos_posibles = list(Producto.objects.filter(categoria__in=caja.allowed_categories.all()))#genera una lista de los productos posibles
 
+
+
     if not productos_posibles: #SI NO HAY PRODUCTOS DE ESA CATEGORIA USAMOS DE CUALQUIERA COMO PLAN B
         #TODO que de un error en lugar de
         productos_posibles = list(Producto.objects.all())

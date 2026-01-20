@@ -29,7 +29,7 @@ class ProductoForm(forms.ModelForm): #aca definimos un form
 class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo stock de cajas pero que revise si hay el producto suficiente para armar una caja
     class Meta:
         model = Mystery_Box
-        fields = ['nombre', 'monthly_price', 'allowed_categories', 'descripcion']
+        fields = ['nombre', 'monthly_price', 'allowed_categories', 'estado', 'descripcion']
         
         # AQUÍ OCURRE LA MAGIA
         widgets = {
@@ -41,6 +41,7 @@ class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo s
             'descripcion': forms.TextInput(attrs={'class': 'cyber-input'}), # <--- Esto convierte el select en checkboxes
             #ya que por defecto el selector es con control y es incomodo, esto es emjor, hay radiobutton tambien y muchos mas
             #https://docs.djangoproject.com/en/6.0/ref/forms/widgets/ aca
+            'estado': forms.RadioSelect()
 
         }
         
@@ -48,12 +49,11 @@ class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo s
             'nombre': 'Nombre de la Caja',
             'monthly_pricce': 'Precio mensual($)',
             'allowed_categories': 'Categorias incluidas',
+            'estado': 'Estado',
             'descripcion': 'Descripción',
         }
 
 
-from django import forms
-from .models import Envio
 
 class EnvioDespachoForm(forms.ModelForm):
     class Meta:
