@@ -49,7 +49,15 @@ class Suscripcion(models.Model):
     #TODO crear fecha de inicio
 class Envio(models.Model):
     suscripcion = models.ForeignKey('suscripcion', related_name='envio', on_delete=models.PROTECT)
+    #! LOGISTICA DE ENVIO
     fecha_envio = models.DateField(default = timezone.now) #investigar auto_now_add=True
+    direccion_envio = models.CharField(max_length=255, blank=True, null=True)
+    ciudad = models.CharField(max_length=100, blank=True, null=True)
+    pais = models.CharField(max_length=50, blank=True, null=True)
+    codigo_postal = models.CharField(max_length=20, blank=True, null=True)
+    nombre_receptor = models.CharField(max_length=100, blank=True, null=True)
+
+    #!#################################
     productos = models.ManyToManyField('producto', related_name='envios')
     estado = models.CharField(choices=[
         ('P', 'Preparando caja'),
@@ -57,9 +65,10 @@ class Envio(models.Model):
         ('R', 'Recibido')
     ], default='P')
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) #TODO esto no lo debe ver el usuario
-    numero_guia = models.CharField(max_length=50, blank=True, null=True)
+    codigo_rastreo_interno = models.CharField(max_length=50, blank=True, null=True) #ointerno
+    numero_guia = models.CharField(max_length=50, blank=True, null=True)#servientrega o fedex
 
 #todo que valga el boton de cancelar y todos los botones
 #todo CONCENTRARNOS AHORITA EN NO AGREGAR NADA NUEVO, SOLO ARREGLAR Y QUE TODO SIRVA BIEN DE LO QUE YA TENEMOS
 #todo no deberia poder yo cambiar a estado recibido antes de enviar, y el recibido deberia cambiarse automaticamente con el fake traker
-#todo poder desactivar cajas
+#// todo poder desactivar cajas

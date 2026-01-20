@@ -1,0 +1,212 @@
+{% extends 'index.html' %} {% block contenido %}
+<style>
+    /* ... Tus estilos anteriores (Mantenidos) ... */
+    .tracker-container {
+        max-width: 800px;
+        margin: 120px auto 50px;
+        padding: 40px;
+        background: var(--glass);
+        border-radius: 20px;
+        border: var(--border-glow);
+        text-align: center;
+    }
+
+    .progress-track {
+        display: flex;
+        justify-content: space-between;
+        margin: 50px 0;
+        position: relative;
+    }
+    .progress-track::before {
+        content: "";
+        position: absolute;
+        top: 20px;
+        left: 10%;
+        right: 10%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        z-index: 1;
+    }
+    .step {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #333;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        position: relative;
+        transition: 0.5s;
+    }
+    .step.active {
+        background: var(--highlight);
+        box-shadow: 0 0 15px var(--highlight);
+    }
+    .step-label {
+        position: absolute;
+        top: 50px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        color: var(--text-muted);
+    }
+    .step.active + .step-label {
+        color: white;
+        font-weight: bold;
+    }
+
+    /* Estilo para el botón de Courier Externo */
+    .courier-box {
+        margin-top: 30px;
+        padding: 25px;
+        background: rgba(var(--highlight-rgb), 0.1);
+        border: 1px solid var(--highlight);
+        border-radius: 15px;
+        text-align: center;
+    }
+
+    /* Nuevo estilo para resaltar el número de guía externo */
+    .guia-externa {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    .guia-externa span {
+        font-family: "Courier New", monospace;
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        color: var(--highlight);
+        font-weight: bold;
+        user-select: all; /* Permite seleccionar todo con un clic */
+    }
+</style>
+
+<div class="container">
+    <div class="tracker-container">
+        <h1>Rastrea tu <span style="color: var(--highlight)">Misterio</span></h1>
+        <p>Ingresa el código interno que recibiste al comprar (Ej: MYS-XXXX).</p>
+
+        <form method="GET" style="margin-top: 30px; display: flex; gap: 10px; justify-content: center">
+            <input
+                type="text"
+                name="guia"
+                value="{{ guia_buscada|default:'' }}"
+                placeholder="Ej: MYS-XXXX"
+                required
+                style="
+                    padding: 15px;
+                    border-radius: 10px;
+                    border: 1px solid #444;
+                    background: rgba(0, 0, 0, 0.3);
+                    color: white;
+                    width: 60%;
+                "
+            />
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
+
+        {% if error %}
+        <div style="margin-top: 20px; color: var(--danger)">{{ error }}</div>
+        {% endif %} {% if envio %}
+        <hr style="margin: 40px 0; opacity: 0.1" />
+
+        <h3>Estado de tu envío: <span style="color: var(--accent)">#{{ envio.codigo_rastreo_interno }}</span></h3>
+        <p>Paquete: <strong>{{ envio.suscripcion.caja.nombre }}</strong></p>
+
+        <div class="progress-track">
+            <div class="step active">
+                <i class="fa-solid fa-box-open"></i>
+                <div class="step-label">Preparando</div>
+            </div>
+
+            <div class="step {% if envio.estado == 'E' or envio.estado == 'R' %}active{% endif %}">
+                <i class="fa-solid fa-truck-fast"></i>
+                <div class="step-label">En Camino</div>
+            </div>
+
+            <div class="step {% if envio.estado == 'R' %}active{% endif %}">
+                <i class="fa-solid fa-house-chimney-check"></i>
+                <div class="step-label">Entregado</div>
+            </div>
+        </div>
+
+        {% if envio.estado == 'E' or envio.estado == 'R' %}
+        <div class="courier-box">
+            <h5 style="margin-bottom: 10px"><i class="fa-solid fa-map-location-dot"></i> Rastreo en tiempo real</h5>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px">
+                Tu paquete ya está en manos del transportista.
+            </p>
+
+            {% if envio.numero_guia %}
+            <div class="guia-externa">
+                <small style="color: #aaa; display: block; margin-bottom: 5px">Nro. de Guía Courier:</small>
+                <span>{{ envio.numero_guia }}</span>
+            </div>
+            <br />
+            {% endif %} {% if envio.pais == 'EC' %}
+            <a
+                href="https://www.servientrega.com.ec/rastreo/guia/{{ envio.numero_guia }}"
+                target="_blank"
+                class="btn btn-primary"
+                style="padding: 10px 25px; background-color: #009640; border-color: #009640"
+            >
+                Rastrear en Servientrega <i class="fa-solid fa-external-link"></i>
+            </a>
+            {% elif envio.pais == 'US' %}
+            <a
+                href="https://www.fedex.com/fedextrack/?trknbr={{ envio.numero_guia }}"
+                target="_blank"
+                class="btn btn-primary"
+                style="padding: 10px 25px; background-color: #4d148c; border-color: #4d148c"
+            >
+                Rastrear en FedEx <i class="fa-solid fa-external-link"></i>
+            </a>
+            {% else %} {% if not envio.numero_guia %}
+            <div class="alert-warning" style="display: inline-block; padding: 10px; border-radius: 10px">
+                <i class="fa-solid fa-clock"></i> Esperando asignación de guía...
+            </div>
+            {% endif %} {% endif %}
+        </div>
+        {% endif %}
+
+        <div
+            style="
+                margin-top: 40px;
+                text-align: left;
+                background: rgba(255, 255, 255, 0.02);
+                padding: 30px;
+                border-radius: 15px;
+                border-left: 4px solid var(--highlight);
+            "
+        >
+            <h4 style="margin-bottom: 20px; color: var(--highlight)">Detalles de Entrega</h4>
+
+            <p style="margin-bottom: 12px">
+                <i class="fa-solid fa-calendar-day" style="color: var(--accent); width: 25px"></i>
+                <strong>Última actualización:</strong> {{ envio.fecha_envio|date:"d M Y" }}
+            </p>
+
+            <p style="margin-bottom: 12px">
+                <i class="fa-solid fa-user-check" style="color: var(--accent); width: 25px"></i>
+                <strong>Entregar a:</strong> {{ envio.nombre_receptor }}
+            </p>
+
+            <p style="margin-bottom: 0">
+                <i class="fa-solid fa-location-dot" style="color: var(--danger); width: 25px"></i>
+                <strong>Destino:</strong>
+            </p>
+            <div style="margin-left: 30px; color: var(--text-muted); font-size: 0.95rem; line-height: 1.6">
+                <div>{{ envio.direccion_envio }}</div>
+                <div>{{ envio.ciudad }}, {{ envio.pais }}</div>
+                <div>CP: {{ envio.codigo_postal }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

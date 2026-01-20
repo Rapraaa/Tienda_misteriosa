@@ -59,25 +59,53 @@ class EnvioDespachoForm(forms.ModelForm):
     class Meta:
         model = Envio
         fields = ['numero_guia', 'estado']
-        widgets = {
-            'numero_guia': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: FEDEX-123456'}),
-            'estado': forms.Select(attrs={'class': 'form-control'}),
-        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            estado_actual = self.instance.estado
+            
+            if estado_actual == 'P':
+                # CAMBIO: Agregamos una etiqueta clara para que el usuario sepa que no puede guardar en 'P'
+                self.fields['estado'].choices = [
+                    ('P', '--- Preparando ---'),
+                    ('E', 'Enviado (Listo para despachar)')
+                ]
+                self.fields['numero_guia'].required = False
+
+            elif estado_actual == 'E':
+                self.fields['estado'].choices = [
+                    ('E', 'Enviado'),
+                    ('R', 'Recibido')
+                ]
+                self.fields['numero_guia'].required = True
+
+    def clean_estado(self):
+        nuevo_estado = self.cleaned_data.get('estado')
+        estado_actual = self.instance.estado
+        if estado_actual == 'P' and nuevo_estado == 'R':
+            raise forms.ValidationError("No puedes saltar de 'Preparando' a 'Recibido'.")
+        return nuevo_estado
 
     def clean(self):
         cleaned_data = super().clean()
         estado = cleaned_data.get('estado')
         guia = cleaned_data.get('numero_guia')
         
-        # self.instance se refiere al objeto Envio que estamos editando
-        if self.instance.productos.count() == 0:
-            raise forms.ValidationError("ERROR: Esta caja está vacía. Ejecuta lllena la caja antes de enviar.")
 
-        # Si pone guía, TIENE que poner Enviado. Si pone Enviado, TIENE que poner guía.
-        if guia and estado == 'P':
-            self.add_error('estado', 'ADVERTENCIA: Tienes un número de guía, debes cambiar el estado a "Enviado" para continuar.')
+        if self.instance.productos.count() == 0:
+            raise forms.ValidationError("ERROR: Esta caja está vacía. Debes llenarla antes de intentar enviarla.")
+
+
+        if estado == 'P':
+            raise forms.ValidationError(
+                "¡ATENCIÓN! Si aún estás preparando la caja, no puedes darle a 'Confirmar'. "
+                "Para salir sin guardar cambios, utiliza el botón 'Cancelar'. "
+                "Para despachar, cambia el estado a 'Enviado'."
+            )
         
+
         if estado == 'E' and not guia:
-            self.add_error('numero_guia', 'ADVERTENCIA: No puedes marcar como "Enviado" sin un número de guía.')
+            self.add_error('numero_guia', 'No puedes marcar como "Enviado" sin ingresar un número de guía.')
 
         return cleaned_data

@@ -1,6 +1,8 @@
 import random #! para las cajas
 from .models import *
 from decimal import Decimal #para la multiplicacion, para que no tenga asi de que 1.000000001
+import string #! estos son para generar el  codigo de rastreo random
+import random 
 
 def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
 
@@ -57,3 +59,23 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
         # todo esto si es que no habia suficiente en la lista, en vez de agarrar segun la categoria agarra de todo, es un plan de emergencia si no tenemos nada, deberiamos mostrar un error en su lugar
         #// todo revisar que pasa si consigue meter objetos pero solo 1, pq en teoria pasaria esto, pero seeria un robo si solo mandamos un objeto
         #todo cantidad de productos dinamica
+
+def generar_id_interno():
+    # Genera un código tipo MYS-A1B2C3
+    while True:
+        caracteres = string.ascii_uppercase + string.digits
+        codigo = ''.join(random.choices(caracteres, k=6))
+        nuevo_codigo = f"MYS-{codigo}"
+        
+        # revisa que no se haya repetido el codigo, por si acaso y rompe el while
+        if not Envio.objects.filter(codigo_rastreo_interno=nuevo_codigo).exists():
+            return nuevo_codigo
+        
+#todo codigo secreto con la seccion de kamasutra
+#todo decidir si se trabajara con suscriociones mensuales o solo una compra y ya 
+\
+#! ---------------------##################################################################################################
+#! ---------------------##################################################################################################
+#TODO ya se, mejor que sean compras unicas, pero tenga una suscripcion que desbloquea cajas adicionales y de descuentos
+#! ---------------------##################################################################################################
+#! ---------------------##################################################################################################

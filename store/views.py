@@ -9,8 +9,11 @@ from .forms import ProductoForm, CajaForm, EnvioDespachoForm #imprtamos el form 
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
-from .utils import generar_caja
+from .utils import generar_caja, generar_id_interno
+from django.shortcuts import render
 # Create your views here.
+stripe.api_key = settings.STRIPE_SECRET_KEY #! mi api
+
 def home(request):
     cajitas= Mystery_Box.objects.all()
     return render(request, "store/templates/home.html", {'boxes' : cajitas}) 
@@ -81,7 +84,6 @@ class SuscripcionListView(LoginRequiredMixin, ListView): #todo esto ed envios gl
 
 #api 
 #*  IMPORTANTE ACA DECIRLE CUAL ES LA KEY, LA SECRETA, SIN ESTO DARA ERROR
-stripe.api_key = settings.STRIPE_SECRET_KEY
 def crear_checkout_session(request, id):
     caja = get_object_or_404(Mystery_Box, id=id) #vemos que caja quiere comprar
     dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
@@ -103,6 +105,9 @@ def crear_checkout_session(request, id):
         # Creamos la sesión de pago en Stripe, es la sesion temporal donde pone sus datos y tal y se decide si pasa(pagA) o no
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'], #tipo de pago, hay mas como cripto por ejemplo
+            #! VAmos a pedir la direccion de envio tambien
+            shipping_address_collection={'allowed_countries':['EC', 'US'],
+                                         },
             line_items=[ #el carrito de compras
                 {
                     # Definimos el producto
@@ -129,8 +134,7 @@ def crear_checkout_session(request, id):
         return redirect(checkout_session.url)
             
     except Exception as e:
-        return render(request, 'store/templates/error_pago.html', {'error': str(e)})
-    
+        return render(request, 'store/templates/error_pago.html', {'error': str(e)}) 
 
 
 
@@ -144,6 +148,17 @@ def compra_exitosa(request, id):
     #obtenemos el objeto
     caja = get_object_or_404(Mystery_Box, id=id)
     
+    #! PEDIMOS LAS DIRECCIONES QUE PUSO EL SAPO DEL USUARIO
+    try:
+        session_stripe = stripe.checkout.Session.retrieve(session_id) #la sesion, para que sepa cua lde todas coger. le pedimos los datos de esa id
+        datos_envio = session_stripe.get('shipping_details') or session_stripe.get('customer_details') #guardamos direccion
+        nombre_cliente = datos_envio.get('name') or request.user.username #guardamos nombre
+        #print(f"{datos_envio}, {session_stripe}. {nombre_cliente}")
+        info_direccion = datos_envio.get('address')
+
+    except Exception as e:
+        #si es que falla
+        return render(request, 'store/templates/error_pago.html', {'error': f"Error de Stripe: {str(e)}"}) #mandamos a la pagina de error
     #! LÓGICA DE NEGOCIO: CREAR SUSCRIPCIÓN Y PRIMER ENVÍO
     #?Usamos get_or_create para que si recarga la página no se cobre doble
     suscripcion, created = Suscripcion.objects.get_or_create( #si hay suscripcion pq recargo pagina no pasa nada, 
@@ -151,14 +166,26 @@ def compra_exitosa(request, id):
         usuario=request.user, 
         caja=caja,
         estado='A', #activo
-        defaults={'fecha_proximo_pago': timezone.now() + timedelta(days=30)} #1 mes pal proximo pago
+        defaults={'fecha_proximo_pago': timezone.now() + timedelta(days=30), #1 mes pal proximo pago\
+        }
+
     )
 
     if created: #si es que es nueva la suscripcion, osea no se actualizo la pagina
         #generamos el primer envio
+        codigo = generar_id_interno() #el codigo
         nuevo_envio = Envio.objects.create(
             suscripcion=suscripcion,
-            estado='P', # Preparando
+            estado='P',
+            nombre_receptor = nombre_cliente,
+            
+            # Usamos 'info_direccion' que preparamos arriba
+            direccion_envio = f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
+            ciudad = info_direccion.get('city', ''),
+            pais = info_direccion.get('country', ''),
+            codigo_postal = info_direccion.get('postal_code', ''),
+            codigo_rastreo_interno = codigo
+   
         )
         generar_caja(nuevo_envio)
         #TODO aca toca llamar al algoritmo que aun no ahcemos en modelos de los productos random
@@ -227,3 +254,51 @@ class EnviosUpdateView(UpdateView):
     
 #todo validar al comprar la caja que no se puedda comprar si esta esta inactiva, ya que aunque el boton se bloquea si entro por el link pues pene
 #todo IMPORTANTISIMO, que en el home los usuarios vean solo las activas, solo alguien con permisos las inactivas
+#todo GRUPOS Bodeguero, meten y administran productos, (podria ser crear cajas, activar y sedasctivar pero creo que por seguridad eso deberia poder solo el gerente)
+#todo GRUPOS Gerente(Subir productos nuevos, crear cajas, activar/desactivar cajas)
+#todo GRUPO usuarios
+#todo grpo logistica(envian y ponen cosas en la caja)
+"""
+Clientes: Compran y ven.
+
+Bodegueros: Son los dueños del inventario (crean productos).
+
+Logística: Son los que mueven las cajas (despachan y actualizan estados).
+
+Gerente: El patrón (supervisa todo y maneja el negocio).
+"""
+#todo peddir direccion de envio
+
+#todo cupones
+#todo logs
+#todo descuentos
+#todo registrar usuarios de staffs
+#todo tema de reportes, facturas y todo eso
+#todo reporte de todos o de servicios
+#todo cancelaciones
+
+#TODO NO DEJAR DARLE A CONFIRMAR ENVIO SI ESTA EN PREPARANDO CAJA, SOLO CANCELAR
+#todo SI AUN NO LO ENVIO NO LO PUEDE RECIBIR
+
+
+def rastrear_pedido(request): 
+    envio = None
+    error = None
+    guia = request.GET.get('guia') # Capturamos el código de la URL
+
+    if guia:
+        try:
+            # Buscamos el envío por número de guía
+            envio = Envio.objects.select_related('suscripcion__caja').get(codigo_rastreo_interno=guia)
+        except Envio.DoesNotExist:
+            error = "No encontramos ningún pedido con ese número de guía. Revisa que esté bien escrito."
+
+    return render(request, 'store/templates/rastreo.html', {
+        'envio': envio,
+        'error': error,
+        'guia_buscada': guia
+    })
+
+
+#Todo tema imopuestos, precio de envio, que si el iva cambia, los registros nuevos no pueden cambiar el iva, precio a los envios de usa
+

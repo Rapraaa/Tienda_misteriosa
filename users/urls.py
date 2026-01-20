@@ -11,5 +11,5 @@ urlpatterns = [
     path('password/change/done', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'), 
     #registro
     path('register/', registro, name="registro"), #TODO VISTA PARA ESTO
-
+  
 ]

@@ -18,5 +18,7 @@ urlpatterns = [
     path('compra-exitosa/<int:id>/', compra_exitosa, name='compra_exitosa'),
     path('envios/', EnviosListView.as_view(), name='envios'),
     path('despachar/<int:pk>/', EnviosUpdateView.as_view(), name='despachar_envio'),
+    path('rastreo/', rastrear_pedido, name='rastrear_pedido'),
 
 ]
+#todo enviar correo con el numero guia, o en la misma pagina

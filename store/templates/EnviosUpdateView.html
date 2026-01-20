@@ -1,6 +1,6 @@
 {% extends 'index.html' %} {% block contenido %}
 <style>
-    /* Estilos inputs */
+    /* ... Tus estilos de inputs y componentes (Mantenidos) ... */
     .form-group input,
     .form-group select {
         width: 100%;
@@ -19,7 +19,6 @@
         font-weight: 600;
     }
 
-    /* Item de empaque */
     .packing-item {
         display: flex;
         align-items: center;
@@ -31,13 +30,12 @@
         transition: all 0.3s;
     }
 
-    /* Cuando se marca el checkbox, el item brilla verde */
-    .packing-item.checked {
+    /* Lógica CSS para resaltar items completados sin JS */
+    .packing-item:has(input:checked) {
         border-left-color: var(--success);
         background: rgba(0, 184, 148, 0.1);
     }
 
-    /* Checkbox personalizado */
     .check-insumo {
         width: 25px;
         height: 25px;
@@ -45,15 +43,6 @@
         accent-color: var(--success);
     }
 
-    /* Botón deshabilitado */
-    button:disabled {
-        background: #555 !important;
-        cursor: not-allowed !important;
-        box-shadow: none !important;
-        color: #aaa !important;
-    }
-
-    /* Alerta de errores generales del form */
     .alert-danger {
         background: rgba(214, 48, 49, 0.2);
         border: 1px solid var(--danger);
@@ -62,107 +51,150 @@
         border-radius: 10px;
         margin-bottom: 20px;
     }
+
+    .shipping-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed var(--highlight);
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    /* --- BLOQUEO VISUAL DEL BOTÓN (MAGIA CSS) --- */
+    /* Si el formulario tiene algún checkbox sin marcar O el selector de estado está en 'P' (Preparando),
+       el botón se verá deshabilitado y no permitirá clics. */
+    form:has(.check-insumo:not(:checked)) button[type="submit"],
+    form:has(select option[value="P"]:checked) button[type="submit"] {
+        background: #555 !important;
+        opacity: 0.5;
+        pointer-events: none; /* Desactiva el clic físicamente */
+        cursor: not-allowed;
+        box-shadow: none !important;
+    }
 </style>
 
 <div class="container" style="padding-top: 120px; padding-bottom: 50px">
     <div style="margin-bottom: 30px">
         <h2>Despachando Envio <span style="color: var(--highlight)">#{{ object.id }}</span></h2>
-        <p>Cliente: <strong>{{ object.suscripcion.usuario.username }}</strong></p>
+        <p>Suscripción de: <strong>{{ object.suscripcion.usuario.username }}</strong></p>
     </div>
 
     {% if form.non_field_errors %}
-    <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.non_field_errors }}</div>
+    <div class="alert-danger">
+        {% for error in form.non_field_errors %}
+        <p style="margin: 0"><i class="fa-solid fa-triangle-exclamation"></i> {{ error }}</p>
+        {% endfor %}
+    </div>
     {% endif %}
 
-    <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px">
-        <div style="background: var(--glass); padding: 30px; border-radius: 20px; border: var(--border-glow)">
-            <h3 style="margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px">
-                <i class="fa-solid fa-clipboard-list"></i> Lista de Verificación
-            </h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px">
+            <div style="background: var(--glass); padding: 30px; border-radius: 20px; border: var(--border-glow)">
+                <h3
+                    style="margin-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px"
+                >
+                    <i class="fa-solid fa-clipboard-list"></i> Lista de Verificación
+                </h3>
 
-            <p style="font-size: 0.9rem; color: var(--accent); margin-bottom: 20px">
-                <i class="fa-solid fa-hand-point-right"></i> Marca todos los items conforme los metes a la caja para
-                desbloquear el envío.
-            </p>
+                <p style="font-size: 0.9rem; color: var(--accent); margin-bottom: 20px">
+                    <i class="fa-solid fa-hand-point-right"></i> Marca todos los items para habilitar el envío.
+                </p>
 
-            {% for producto in items_a_empacar %}
-            <div class="packing-item" id="card-{{ producto.id }}">
-                <div style="flex-grow: 1">
-                    <h5 style="margin: 0; font-size: 1rem">{{ producto.nombre }}</h5>
-                    <small style="color: var(--text-muted)">ID: {{ producto.id }}</small>
+                {% for producto in items_a_empacar %}
+                <div class="packing-item">
+                    <div style="flex-grow: 1">
+                        <h5 style="margin: 0; font-size: 1rem">{{ producto.nombre }}</h5>
+                        <small style="color: var(--text-muted)">ID: {{ producto.id }}</small>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="check-insumo" required />
+                    </div>
                 </div>
-                <div>
-                    <input
-                        type="checkbox"
-                        class="check-insumo"
-                        onchange="verificarPacking(this, 'card-{{ producto.id }}')"
-                    />
+                {% empty %}
+                <div class="alert-danger">¡ALERTA! Esta caja no tiene productos asignados.</div>
+                {% endfor %}
+
+                <div
+                    style="
+                        margin-top: 40px;
+                        background: rgba(0, 0, 0, 0.3);
+                        padding: 20px;
+                        border-radius: 15px;
+                        border: 1px dashed rgba(255, 255, 255, 0.1);
+                    "
+                >
+                    <h6
+                        style="
+                            color: var(--text-muted);
+                            text-transform: uppercase;
+                            font-size: 0.8rem;
+                            letter-spacing: 1px;
+                            margin-bottom: 15px;
+                        "
+                    >
+                        <i class="fa-solid fa-coins"></i> Resumen Financiero
+                    </h6>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px">
+                        <span>Ingreso Suscripción:</span>
+                        <span style="color: var(--success); font-family: monospace">+${{ finanzas.pagado }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between">
+                        <span>Costo Mercancía:</span>
+                        <span style="color: var(--danger); font-family: monospace">-${{ finanzas.costo }}</span>
+                    </div>
+                    <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 10px 0" />
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem">
+                        <span>Margen:</span>
+                        <span
+                            style="color: {% if finanzas.es_rentable %}var(--highlight){% else %}var(--danger){% endif %}; font-family: monospace;"
+                        >
+                            ${{ finanzas.margen }}
+                        </span>
+                    </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="alert-danger">¡ALERTA! Esta caja no tiene productos asignados.</div>
-            {% endfor %}
 
             <div
                 style="
-                    margin-top: 40px;
-                    background: rgba(0, 0, 0, 0.3);
-                    padding: 20px;
-                    border-radius: 15px;
-                    border: 1px dashed rgba(255, 255, 255, 0.1);
+                    background: var(--glass);
+                    padding: 30px;
+                    border-radius: 20px;
+                    border: var(--border-glow);
+                    height: fit-content;
                 "
             >
-                <h6
-                    style="
-                        color: var(--text-muted);
-                        text-transform: uppercase;
-                        font-size: 0.8rem;
-                        letter-spacing: 1px;
-                        margin-bottom: 15px;
-                    "
-                >
-                    <i class="fa-solid fa-coins"></i> Resumen Financiero
-                </h6>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px">
-                    <span>Ingreso Suscripción:</span>
-                    <span style="color: var(--success); font-family: monospace">+${{ finanzas.pagado }}</span>
+                <div class="shipping-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start">
+                        <h5 style="color: var(--highlight); margin-bottom: 15px">
+                            <i class="fa-solid fa-truck-fast"></i> Datos de Entrega
+                        </h5>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.95rem">
+                        <div style="display: flex; gap: 10px">
+                            <i class="fa-solid fa-user" style="color: var(--accent); margin-top: 3px"></i>
+                            <div>
+                                <span style="font-weight: bold; display: block">{{ object.nombre_receptor }}</span>
+                                <small style="color: var(--text-muted)">Receptor</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px">
+                            <i class="fa-solid fa-map-location-dot" style="color: var(--accent); margin-top: 3px"></i>
+                            <div>
+                                <div style="display: block">{{ object.direccion_envio }}</div>
+                                <div style="display: block">{{ object.ciudad }}, {{ object.pais }}</div>
+                                <div style="display: block; color: var(--text-muted)">
+                                    CP: {{ object.codigo_postal }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between">
-                    <span>Costo Mercancía:</span>
-                    <span style="color: var(--danger); font-family: monospace">-${{ finanzas.costo }}</span>
-                </div>
-                <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 10px 0" />
-                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem">
-                    <span>Margen:</span>
-                    <span
-                        style="color: {% if finanzas.es_rentable %}var(--highlight){% else %}var(--danger){% endif %}; font-family: monospace;"
-                    >
-                        ${{ finanzas.margen }}
-                    </span>
-                </div>
-                {% if not finanzas.es_rentable %}
-                <small style="color: var(--danger); display: block; margin-top: 5px"
-                    >⚠️ Estás perdiendo dinero en esta caja.</small
-                >
-                {% endif %}
-            </div>
-        </div>
 
-        <div
-            style="
-                background: var(--glass);
-                padding: 30px;
-                border-radius: 20px;
-                border: var(--border-glow);
-                height: fit-content;
-            "
-        >
-            <h3 style="margin-bottom: 20px; color: var(--highlight)">
-                <i class="fa-solid fa-paper-plane"></i> Finalizar
-            </h3>
-
-            <form method="post">
-                {% csrf_token %}
+                <h3 style="margin-bottom: 20px; color: var(--highlight)">
+                    <i class="fa-solid fa-paper-plane"></i> Finalizar
+                </h3>
 
                 <div class="form-group">
                     <label>Número de Guía</label>
@@ -173,6 +205,7 @@
                 <div class="form-group">
                     <label>Estado</label>
                     {{ form.estado }}
+                    <small style="color: var(--text-muted)">Debe elegir 'Enviado' para poder confirmar.</small>
                     <small style="color: var(--danger)">{{ form.estado.errors }}</small>
                 </div>
 
@@ -180,51 +213,25 @@
                     <a
                         href="{% url 'envios' %}"
                         class="btn"
-                        style="background: #444; color: white; flex: 1; text-align: center"
+                        style="
+                            background: #444;
+                            color: white;
+                            flex: 1;
+                            text-align: center;
+                            text-decoration: none;
+                            padding: 15px;
+                            border-radius: 10px;
+                        "
                     >
                         Cancelar
                     </a>
 
-                    <button type="submit" id="btn-enviar" class="btn btn-primary" style="flex: 2" disabled>
-                        <i class="fa-solid fa-lock"></i> Completar Packing
+                    <button type="submit" class="btn btn-primary" style="flex: 2">
+                        Confirmar Envío <i class="fa-solid fa-rocket"></i>
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
-
-<script>
-    function verificarPacking(checkbox, cardId) {
-        const card = document.getElementById(cardId);
-        if (checkbox.checked) {
-            card.classList.add("checked");
-        } else {
-            card.classList.remove("checked");
-        }
-        validarBoton();
-    }
-
-    function validarBoton() {
-        const totalItems = document.querySelectorAll(".check-insumo").length;
-        const marcados = document.querySelectorAll(".check-insumo:checked").length;
-        const btn = document.getElementById("btn-enviar");
-
-        if (totalItems === 0) {
-            btn.disabled = true;
-            btn.innerHTML = "<i class='fa-solid fa-ban'></i> Caja Vacía";
-            return;
-        }
-
-        if (totalItems === marcados) {
-            btn.disabled = false;
-            btn.innerHTML = "Confirmar Envío <i class='fa-solid fa-rocket'></i>";
-        } else {
-            btn.disabled = true;
-            btn.innerHTML = `<i class='fa-solid fa-lock'></i> Faltan ${totalItems - marcados} items`;
-        }
-    }
-
-    validarBoton();
-</script>
 {% endblock %}
