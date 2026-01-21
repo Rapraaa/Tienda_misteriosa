@@ -314,3 +314,5 @@ def perfil(request):
     })
 
 #todo si se llama domenica puede usar el cupon de kamasutra
+
+#todo, hacer carrito de compras, y que se pueda agregar cosas al carrito de compras sin iniciar sesion pero que ya de ahi para pagar pida iniciar sesion y se pasen las cosas
