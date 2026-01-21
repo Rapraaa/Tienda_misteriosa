@@ -126,9 +126,16 @@
               <p class="text-[11px] text-white/55 uppercase tracking-widest">Socio: ${{ caja.precio_suscripcion }}</p>
             {% endif %}
           </div>
-          <a href="{% url 'box' caja.id %}" class="px-5 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2">
-            Ver <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          <div class="flex gap-2">
+            <button 
+              onclick="agregarAlCarrito({{ caja.id }}, '{{ caja.nombre }}')"
+              class="px-4 py-3 rounded-full border border-mystery-cyan/30 hover:bg-mystery-cyan/10 font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2 text-mystery-cyan">
+              <i class="fa-solid fa-cart-plus"></i>
+            </button>
+            <a href="{% url 'box' caja.id %}" class="px-5 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2">
+              Ver <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
         </div>
       </div>
     </article>
@@ -139,4 +146,29 @@
     {% endfor %}
   </div>
 </section>
+
+<script>
+function agregarAlCarrito(cajaId, cajaNombre) {
+  fetch(`/carrito/agregar/${cajaId}/`, {
+    method: 'GET',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Actualizar contador del carrito
+      location.reload();
+    } else {
+      alert(data.error || 'Error al agregar al carrito');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    // Si no es AJAX, redirigir normalmente
+    window.location.href = `/carrito/agregar/${cajaId}/`;
+  });
+}
+</script>
 {% endblock %}

@@ -26,6 +26,13 @@ urlpatterns = [
     path('perfil/', perfil, name='perfil'),
     path('suscribirse/premium/', crear_suscripcion_premium, name='suscribirse_premium'),
     path('membresia-exitosa/', membresia_exitosa, name='membresia_exitosa'),
+    
+    # Carrito de compras
+    path('carrito/', ver_carrito, name='ver_carrito'),
+    path('carrito/agregar/<int:id>/', agregar_al_carrito, name='agregar_carrito'),
+    path('carrito/eliminar/<int:id>/', eliminar_del_carrito, name='eliminar_carrito'),
+    path('carrito/checkout/', checkout_carrito, name='checkout_carrito'),
+    path('carrito/compra-exitosa/', compra_exitosa_carrito, name='compra_exitosa_carrito'),
 
 ]
 #todo enviar correo con el numero guia, o en la misma pagina

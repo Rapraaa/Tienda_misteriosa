@@ -11,6 +11,8 @@ from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
 from .utils import generar_caja, generar_id_interno, es_usuario_premium
 from django.shortcuts import render
+from .cart import Cart  # Importar la clase Cart
+from django.http import JsonResponse  # Para respuestas AJAX
 # Create your views here.
 stripe.api_key = settings.STRIPE_SECRET_KEY #! mi api
 
@@ -416,4 +418,191 @@ def membresia_exitosa(request):
     suscripcion.save()
 
     return render(request, 'store/templates/membresia_confirmada.html')
+
+
+#! ==================== CARRITO DE COMPRAS ====================
+
+def agregar_al_carrito(request, id):
+    """Agrega una caja al carrito (funciona con AJAX y sin AJAX)"""
+    caja = get_object_or_404(Mystery_Box, id=id)
+    
+    # Validar que la caja esté activa
+    if caja.estado != 'A':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Esta caja no está disponible'})
+        return redirect('home')
+    
+    # Validar cajas exclusivas
+    if caja.es_exclusiva and not es_usuario_premium(request.user):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Esta caja es exclusiva para socios premium'})
+        return redirect('suscribirse_premium')
+    
+    cart = Cart(request)
+    cart.add(caja_id=id, cantidad=1)
+    
+    # Si es una petición AJAX, devolver JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart.get_count(),
+            'message': f'{caja.nombre} agregada al carrito'
+        })
+    
+    # Si no es AJAX, redirigir al carrito
+    return redirect('ver_carrito')
+
+
+def ver_carrito(request):
+    """Muestra la página del carrito"""
+    cart = Cart(request)
+    items = cart.get_items()
+    total = cart.get_total()
+    
+    return render(request, 'store/templates/carrito.html', {
+        'items': items,
+        'total': total,
+        'cart_count': cart.get_count()
+    })
+
+
+def eliminar_del_carrito(request, id):
+    """Elimina un item del carrito"""
+    cart = Cart(request)
+    cart.remove(caja_id=id)
+    
+    # Si es AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'cart_count': cart.get_count(),
+            'total': float(cart.get_total())
+        })
+    
+    return redirect('ver_carrito')
+
+
+@login_required
+def checkout_carrito(request):
+    """Crea una sesión de Stripe para el carrito completo"""
+    cart = Cart(request)
+    items = cart.get_items()
+    
+    if not items:
+        return redirect('ver_carrito')
+    
+    dominio = 'http://localhost:8000'
+    es_premium = es_usuario_premium(request.user)
+    
+    # Validar cajas exclusivas
+    for item in items:
+        if item['caja'].es_exclusiva and not es_premium:
+            return redirect('suscribirse_premium')
+    
+    # Crear line_items para Stripe
+    line_items = []
+    for item in items:
+        caja = item['caja']
+        cantidad = item['cantidad']
+        
+        # Determinar precio
+        if es_premium:
+            precio_final = caja.precio_suscripcion
+        else:
+            precio_final = caja.precio_base
+        
+        line_items.append({
+            'price_data': {
+                'currency': 'usd',
+                'unit_amount': int(precio_final * 100),  # Stripe usa centavos
+                'product_data': {
+                    'name': f"{caja.nombre}",
+                    'description': caja.descripcion or "Caja misteriosa",
+                },
+            },
+            'quantity': cantidad,
+        })
+    
+    try:
+        # Crear sesión de checkout en Stripe
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            shipping_address_collection={'allowed_countries': ['EC', 'US']},
+            line_items=line_items,
+            mode='payment',
+            success_url=f'{dominio}/carrito/compra-exitosa/?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{dominio}/carrito/',
+        )
+        
+        return redirect(checkout_session.url)
+        
+    except Exception as e:
+        return render(request, 'store/templates/error_pago.html', {'error': str(e)})
+
+
+@login_required
+def compra_exitosa_carrito(request):
+    """Procesa la compra exitosa del carrito"""
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return redirect('home')
+    
+    # Verificar si ya procesamos este pago
+    envios_existentes = Envio.objects.filter(stripe_session_id=session_id, usuario=request.user)
+    if envios_existentes.exists():
+        # Ya se procesó, mostrar los envíos
+        return render(request, "store/templates/pago_exitoso_carrito.html", {
+            'envios': envios_existentes
+        })
+    
+    # Obtener items del carrito
+    cart = Cart(request)
+    items = cart.get_items()
+    
+    if not items:
+        return redirect('home')
+    
+    # Obtener datos de envío de Stripe
+    try:
+        session_stripe = stripe.checkout.Session.retrieve(session_id)
+        datos_envio = session_stripe.get('shipping_details') or session_stripe.get('customer_details')
+        nombre_cliente = datos_envio.get('name') or request.user.username
+        info_direccion = datos_envio.get('address')
+    except Exception as e:
+        return render(request, 'store/templates/error_pago.html', {'error': f"Error de Stripe: {str(e)}"})
+    
+    # Crear suscripción si no existe
+    suscripcion, _ = Suscripcion.objects.get_or_create(usuario=request.user)
+    
+    # Crear un Envio por cada caja en el carrito
+    envios_creados = []
+    for item in items:
+        caja = item['caja']
+        cantidad = item['cantidad']
+        
+        # Crear múltiples envíos si la cantidad es mayor a 1
+        for _ in range(cantidad):
+            nuevo_envio = Envio.objects.create(
+                usuario=request.user,
+                caja=caja,
+                stripe_session_id=session_id,
+                nombre_receptor=nombre_cliente,
+                direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
+                ciudad=info_direccion.get('city', ''),
+                pais=info_direccion.get('country', ''),
+                codigo_postal=info_direccion.get('postal_code', ''),
+                codigo_rastreo_interno=generar_id_interno(),
+                numero_guia=None,
+                estado='P'
+            )
+            generar_caja(nuevo_envio)
+            envios_creados.append(nuevo_envio)
+    
+    # Vaciar el carrito
+    cart.clear()
+    
+    return render(request, "store/templates/pago_exitoso_carrito.html", {
+        'envios': envios_creados
+    })
+
 

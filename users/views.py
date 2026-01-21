@@ -1,6 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm #importante
 from django.contrib.auth import login #el login que usamos para crear usuarios
+from store.cart import Cart  # Importar Cart para migrar carrito
 
 # Create your views here.
 def registro(request):
@@ -11,20 +12,13 @@ def registro(request):
             usuario = form.save() #agarra los datos del formulario, conviértelos en una fila de SQL y guárdalos 
             #en la base de datos permanentemente. Y devuélveme al usuario creado en la variable usuario
             login(request, usuario)#ya que te acabas de registrar con éxito, te inicio sesión automáticamente ahora mismo para que entres directo
+            
+            # Migrar carrito de sesión a base de datos
+            cart = Cart(request)
+            cart.merge_to_user(usuario)
+            
+            return redirect('home') # Redirigimos al inicio tras el éxito
 
     else:
         form = UserCreationForm() #parentesis? para instanciarlo
     return render(request, 'users/templates/registration/registro.html', {'form':form}) #mandamos como parametro el formulario, como es eso de mandar
-
-def registro(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            usuario = form.save()
-            login(request, usuario)
-            return redirect('home') # Redirigimos al inicio tras el éxito
-    else:
-        form = UserCreationForm()
-    
-    # Asegúrate de que la ruta del template sea correcta según tu estructura
-    return render(request, 'registration/registro.html', {'form': form})

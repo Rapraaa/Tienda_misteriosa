@@ -92,6 +92,28 @@ class Envio(models.Model):
     codigo_rastreo_interno = models.CharField(max_length=50, blank=True, null=True) #ointerno
     numero_guia = models.CharField(max_length=50, blank=True, null=True)#servientrega o fedex
 
+
+class CarritoItem(models.Model):
+    """Modelo para almacenar items del carrito de usuarios autenticados"""
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carrito_items')
+    caja = models.ForeignKey('Mystery_Box', on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('usuario', 'caja')  # Un usuario no puede tener la misma caja duplicada en el carrito
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.caja.nombre} x{self.cantidad}"
+    
+    @property
+    def subtotal(self):
+        """Calcula el subtotal considerando si el usuario es premium"""
+        from .utils import es_usuario_premium
+        es_premium = es_usuario_premium(self.usuario)
+        precio = self.caja.precio_suscripcion if es_premium else self.caja.precio_base
+        return precio * self.cantidad
+
 #todo que valga el boton de cancelar y todos los botones
 #todo CONCENTRARNOS AHORITA EN NO AGREGAR NADA NUEVO, SOLO ARREGLAR Y QUE TODO SIRVA BIEN DE LO QUE YA TENEMOS
 #todo no deberia poder yo cambiar a estado recibido antes de enviar, y el recibido deberia cambiarse automaticamente con el fake traker

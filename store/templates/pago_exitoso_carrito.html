@@ -1,0 +1,72 @@
+{% extends "index.html" %}
+
+{% block title %}Compra exitosa | Mysterio{% endblock %}
+
+{% block contenido %}
+<section class="max-w-4xl mx-auto px-4 md:px-6 py-16">
+  <div class="glass-strong rounded-3xl border border-white/10 shadow-glow p-8 md:p-12 text-center overflow-hidden relative">
+    <div class="absolute -top-28 -left-28 h-72 w-72 rounded-full bg-mystery-success/20 blur-[90px]"></div>
+    <div class="absolute -bottom-28 -right-28 h-72 w-72 rounded-full bg-mystery-cyan/15 blur-[90px]"></div>
+
+    <div class="relative">
+      <div class="mx-auto h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+        <i class="fa-solid fa-circle-check text-mystery-success text-3xl"></i>
+      </div>
+
+      <h1 class="text-3xl md:text-4xl font-extrabold">
+        ¡Compra confirmada!
+      </h1>
+      <p class="mt-3 text-white/70 leading-relaxed">
+        Tus cajas ya están en fase de preparación. Guarda tus códigos de rastreo.
+      </p>
+
+      <!-- Lista de envíos -->
+      <div class="mt-8 space-y-4">
+        {% for envio in envios %}
+        <div class="glass rounded-2xl border border-white/10 p-6 text-left">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-extrabold">{{ envio.caja.nombre }}</h3>
+              <p class="text-white/60 text-sm mt-1">{{ envio.caja.descripcion|truncatechars:60 }}</p>
+            </div>
+            <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-box-open text-mystery-cyan text-xl"></i>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-white/55 text-xs uppercase tracking-widest">Código interno</p>
+              <p class="mt-2 font-mono text-xl tracking-widest text-mystery-gold">{{ envio.codigo_rastreo_interno }}</p>
+            </div>
+            <div class="flex items-end justify-end">
+              <a href="{% url 'rastrear_pedido' %}?guia={{ envio.codigo_rastreo_interno }}" class="inline-flex items-center gap-2 text-sm font-semibold text-mystery-cyan hover:text-white transition-colors">
+                Ver rastreo <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Información adicional -->
+      <div class="mt-8 glass rounded-2xl border border-white/10 p-6">
+        <p class="text-white/55 text-xs uppercase tracking-widest mb-3">Siguiente paso</p>
+        <p class="text-white/70 text-sm leading-relaxed">
+          Guarda tus códigos. Si ya tienes guía de courier, aparecerá en la pantalla de rastreo.
+        </p>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="{% url 'perfil' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest inline-flex items-center justify-center gap-2">
+          <i class="fa-solid fa-user"></i> Ver mis pedidos
+        </a>
+        <a href="{% url 'home' %}" class="px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Seguir explorando
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
