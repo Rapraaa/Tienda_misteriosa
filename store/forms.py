@@ -29,28 +29,28 @@ class ProductoForm(forms.ModelForm): #aca definimos un form
 class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo stock de cajas pero que revise si hay el producto suficiente para armar una caja
     class Meta:
         model = Mystery_Box
-        fields = ['nombre', 'monthly_price', 'allowed_categories', 'estado', 'descripcion']
+        fields = ['nombre', 'precio_base', 'porcentaje_descuento', 'es_exclusiva', 'allowed_categories', 'estado', 'descripcion']
         
         # AQUÍ OCURRE LA MAGIA
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'cyber-input', 'placeholder': 'Ej: Caja Misteriosa Anime'}), #texto
             #! LOS ATTRS es para que envie con esos atributos al html, y con los dise;os que ya definimos sepa como adaptarlos
             #! podemos ponerlos aca para mas facilidad, o en el html, da igual a la final pero aca es mas legible
-            'monthly_price': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0'}),
-            'allowed_categories': forms.CheckboxSelectMultiple(attrs={'class': 'cyber-input'}),#numeros
-            'descripcion': forms.TextInput(attrs={'class': 'cyber-input'}), # <--- Esto convierte el select en checkboxes
-            #ya que por defecto el selector es con control y es incomodo, esto es emjor, hay radiobutton tambien y muchos mas
-            #https://docs.djangoproject.com/en/6.0/ref/forms/widgets/ aca
+            'precio_base': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0', 'step': '0.01'}),
+            'porcentaje_descuento': forms.Select(attrs={'class': 'cyber-input'}), # Select para tus OPCIONES_DESCUENTO
+            'es_exclusiva': forms.CheckboxInput(attrs={'class': 'cyber-checkbox'}),
+            'allowed_categories': forms.CheckboxSelectMultiple(attrs={'class': 'cyber-input'}),
+            'descripcion': forms.Textarea(attrs={'class': 'cyber-input', 'rows': 3}),
             'estado': forms.RadioSelect()
 
         }
         
         labels = { #los labels pe
             'nombre': 'Nombre de la Caja',
-            'monthly_pricce': 'Precio mensual($)',
-            'allowed_categories': 'Categorias incluidas',
-            'estado': 'Estado',
-            'descripcion': 'Descripción',
+            'precio_base': 'Precio($)',
+            'porcentaje_descuento': 'Nivel de Descuento Premium',
+            'es_exclusiva': '¿Es exclusiva para socios?',
+            'allowed_categories': 'Categorías permitidas',
         }
 
 

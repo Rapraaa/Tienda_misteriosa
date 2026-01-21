@@ -6,8 +6,15 @@ import random
 
 def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
 
-    caja = Envio_obj.suscripcion.caja
-    valor_maximo = caja.monthly_price * Decimal('1.5')
+    caja = Envio_obj.caja
+
+    # 2. Vemos si el usuario es premium para definir el presupuesto de la caja
+    es_premium = es_usuario_premium(Envio_obj.usuario)
+
+    #precio_pagado = caja.precio_suscripcion if es_premium else caja.precio_base  no seria jsuto, cancelado
+
+    #presupuesto maximo
+    valor_maximo = caja.precio_base * Decimal('1.5')
 
     productos_posibles = list(Producto.objects.filter(categoria__in=caja.allowed_categories.all()))#genera una lista de los productos posibles
 
@@ -79,3 +86,9 @@ def generar_id_interno():
 #TODO ya se, mejor que sean compras unicas, pero tenga una suscripcion que desbloquea cajas adicionales y de descuentos
 #! ---------------------##################################################################################################
 #! ---------------------##################################################################################################
+
+def es_usuario_premium(user):
+    if not user.is_authenticated:
+        return False
+    # Buscamos si tiene una suscripción activa
+    return Suscripcion.objects.filter(usuario=user, estado='A').exists()

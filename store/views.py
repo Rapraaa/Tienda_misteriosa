@@ -9,7 +9,7 @@ from .forms import ProductoForm, CajaForm, EnvioDespachoForm #imprtamos el form 
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
-from .utils import generar_caja, generar_id_interno
+from .utils import generar_caja, generar_id_interno, es_usuario_premium
 from django.shortcuts import render
 # Create your views here.
 stripe.api_key = settings.STRIPE_SECRET_KEY #! mi api
@@ -84,23 +84,24 @@ class SuscripcionListView(LoginRequiredMixin, ListView): #todo esto ed envios gl
 
 #api 
 #*  IMPORTANTE ACA DECIRLE CUAL ES LA KEY, LA SECRETA, SIN ESTO DARA ERROR
-def crear_checkout_session(request, id):
-    caja = get_object_or_404(Mystery_Box, id=id) #vemos que caja quiere comprar
+def crear_checkout_session(request, id, tipo): #! EStE STRIPE ES PARA COMPRAS NORMALES
+    caja = get_object_or_404(Mystery_Box, id=id,),  #vemos que caja quiere comprar
     dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
     #! DOCUMENTACION STRIPE API https://docs.stripe.com/api/checkout/sessions/create
+
+    es_premium = es_usuario_premium(request.user) #vemos si es premiun el usuario
+
+    if caja.es_exclusiva and not es_premium:
+        return redirect('pagina_hazte_premium') # Mandarlo a que se suscriba si la caja es premium
 
     if caja.estado != 'A': #validar que sea activa, sino con el link nos hacen la 13 14
             # TODO Opcional: Mandar un mensaje de error con 'messages' de Django o alguna vista personalizada bien linda bacana sexy sensuala
             return redirect('home')
-    suscripcion_existente = Suscripcion.objects.filter( #revisamos que no se pueda suscribir de neuvo a algo que ya esta
-        usuario=request.user,
-        caja=caja,
-        estado='A' # Solo nos importa si está activa
-    ).exists()
+    if es_premium: #true or false
+        precio_final = caja.precio_suscripcion # El precio con descuento
+    else:
+        precio_final = caja.precio_base # Precio normal
 
-
-    if suscripcion_existente:
-            return redirect('home') # TODO: Redirigir a una página que diga que ya tiene esa suscripcion o caka
     try:
         # Creamos la sesión de pago en Stripe, es la sesion temporal donde pone sus datos y tal y se decide si pasa(pagA) o no
         checkout_session = stripe.checkout.Session.create(
@@ -115,7 +116,7 @@ def crear_checkout_session(request, id):
                         'currency': 'usd', #dolares
                         'unit_amount': int(caja.monthly_price * 100), # Stripe usa centavos (25.00 -> 2500)
                         'product_data': { #datos del producto
-                            'name': f"Suscripción: {caja.nombre}", #el nombre
+                            'name': {'name': f"Compra de {caja.nombre}"}, #el nombre
                             'description': caja.descripcion, #descripcionn
                         },
                     },
@@ -316,3 +317,64 @@ def perfil(request):
 #todo si se llama domenica puede usar el cupon de kamasutra
 
 #todo, hacer carrito de compras, y que se pueda agregar cosas al carrito de compras sin iniciar sesion pero que ya de ahi para pagar pida iniciar sesion y se pasen las cosas
+
+
+#!STRIPE PARA SUSCRIPCIONES
+
+#* variable para el precio de la membresia
+PRECIO_MEMBRESIA_USD = 9.99
+
+@login_required
+def crear_suscripcion_premium(request):
+    dominio = "http://localhost:8000"
+    
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'unit_amount': int(PRECIO_MEMBRESIA_USD * 100),
+                    'product_data': {
+                        'name': 'Mysterio Pass - Membresía Premium',
+                        'description': 'Acceso a descuentos exclusivos y cajas VIP en toda la tienda.',
+                    },
+                },
+                'quantity': 1,
+            }],
+            mode='payment', # Usamos payment para cobro único que activa 30 días
+            success_url=f'{dominio}/membresia-exitosa/?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{dominio}/perfil/',
+        )
+        return redirect(checkout_session.url)
+    except Exception as e:
+        return render(request, 'store/templates/error_pago.html', {'error': str(e)})
+
+@login_required
+def membresia_exitosa(request):
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return redirect('home')
+
+    # si no existe la creamos
+    suscripcion, created = Suscripcion.objects.get_or_create(
+        usuario=request.user,
+        defaults={'estado': 'I'} #si es nueva inicia en inactiva, esto para el paso de mas adelante
+    )
+
+    hoy = timezone.now().date()
+
+    # si es que ya esta activa, osea ya se se activo, y tiene fecha de proximo pago y esta es menor a hoy, osea no era hoy su fecha de pago
+    if suscripcion.estado == 'A' and suscripcion.fecha_proximo_pago and suscripcion.fecha_proximo_pago > hoy:
+        #Sumamos 30 días a su fecha de vencimiento actual
+        nueva_fecha = suscripcion.fecha_proximo_pago + timedelta(days=30)
+    else:
+        # el usuaruo es nuevo o ya expiro su membresia, ahi solo le aumentamos 30 a la fecha de hoy
+        nueva_fecha = hoy + timedelta(days=30)
+
+    # actualizamos lso datos y activamos la suscripsion
+    suscripcion.estado = 'A'
+    suscripcion.fecha_proximo_pago = nueva_fecha
+    suscripcion.save()
+
+    return render(request, 'store/templates/membresia_confirmada.html')
