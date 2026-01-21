@@ -69,6 +69,24 @@
                     <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">Entregado</span>
                 </div>
             </div>
+            
+            {% if envio.numero_guia %}
+            <div class="my-8 p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h5 class="text-white/80 font-bold mb-1">Guía Oficial de Envío</h5>
+                    <div class="flex items-center gap-3">
+                        <code class="text-xl font-mono text-mystery-gold bg-black/30 px-3 py-1 rounded-lg border border-white/10 select-all">{{ envio.numero_guia }}</code>
+                        <button onclick="navigator.clipboard.writeText('{{ envio.numero_guia }}'); this.innerHTML='<i class=\'fa-solid fa-check\'></i>';" class="text-white/50 hover:text-white transition-colors" title="Copiar">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <a href="https://www.servientrega.com.ec/rastreo/guia/" target="_blank" rel="noopener noreferrer" 
+                   class="px-6 py-3 rounded-xl bg-gradiente-principal hover:brightness-110 text-white font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2">
+                    <i class="fa-solid fa-truck-fast"></i> Rastrear en Servientrega
+                </a>
+            </div>
+            {% endif %}
 
             <div class="grid grid-cols-2 gap-4 text-sm border-t border-white/5 pt-4">
                 <div>
@@ -80,21 +98,6 @@
                     <p class="text-white">{{ envio.ciudad }}, {{ envio.pais }}</p>
                 </div>
             </div>
-
-            {% if envio.numero_guia and not "cs_test" in envio.numero_guia %}
-            <div class="mt-6 p-4 bg-black/40 rounded-xl border border-mystery-cyan/30 text-center">
-                <small class="block text-mystery-cyan uppercase text-[10px] font-bold mb-1"
-                    >Guía del Courier Internacional</small
-                >
-                <strong class="text-lg font-mono text-white tracking-widest">{{ envio.numero_guia }}</strong>
-            </div>
-            {% else %}
-            <div class="mt-6 p-3 bg-white/5 rounded-xl text-center">
-                <p class="text-xs text-white/50 italic">
-                    Tu guía de despacho local se generará cuando el paquete salga de bodega.
-                </p>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
     </div>

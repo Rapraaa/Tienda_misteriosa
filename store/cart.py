@@ -130,10 +130,11 @@ class Cart:
         Migra el carrito de sesión a la base de datos cuando el usuario inicia sesión.
         Se llama después del login.
         """
-        if not self.cart:
+
+        if not self.session.get('cart'):
             return
         
-        for caja_id, cantidad in self.cart.items():
+        for caja_id, cantidad in self.session['cart'].items():
             try:
                 caja = Mystery_Box.objects.get(id=caja_id)
                 carrito_item, created = CarritoItem.objects.get_or_create(

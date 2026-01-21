@@ -179,6 +179,15 @@ class Cupon(models.Model):
         self.usos_actuales += 1
         self.save()
 
+class CuponUso(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cupones_usados')
+    cupon = models.ForeignKey(Cupon, on_delete=models.CASCADE, related_name='usos')
+    fecha_uso = models.DateTimeField(auto_now_add=True)
+    descuento_aplicado = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.usuario.username} usó {self.cupon.codigo}"
+
 #todo que valga el boton de cancelar y todos los botones
 #todo CONCENTRARNOS AHORITA EN NO AGREGAR NADA NUEVO, SOLO ARREGLAR Y QUE TODO SIRVA BIEN DE LO QUE YA TENEMOS
 #todo no deberia poder yo cambiar a estado recibido antes de enviar, y el recibido deberia cambiarse automaticamente con el fake traker

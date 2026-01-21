@@ -55,21 +55,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for envio in mis_envios %}
+                    {% regroup mis_envios by codigo_rastreo_interno as pedidos_list %}
+                    {% for pedido in pedidos_list %}
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td class="py-4 px-4">{{ envio.caja.nombre }}</td>
-                        <td class="py-4 px-4 text-white/60">{{ envio.fecha_envio|date:"d M Y" }}</td>
                         <td class="py-4 px-4">
-                            <span class="bg-white/10 px-3 py-1 rounded-lg text-xs md:text-sm">
-                                {{ envio.get_estado_display }}
+                            <div class="flex flex-col gap-1">
+                            {% for item in pedido.list %}
+                                <span class="text-sm font-medium text-white/90">
+                                    <i class="fa-solid fa-box text-mystery-purple mr-2"></i>{{ item.caja.nombre }}
+                                </span>
+                            {% endfor %}
+                            </div>
+                        </td>
+                        <td class="py-4 px-4 text-white/60">{{ pedido.list.0.fecha_envio|date:"d M Y" }}</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-white/10 px-3 py-1 rounded-lg text-xs md:text-sm whitespace-nowrap">
+                                {{ pedido.list.0.get_estado_display }}
                             </span>
                         </td>
                         <td class="py-4 px-4">
                             <a
-                                href="{% url 'rastrear_pedido' %}?guia={{ envio.codigo_rastreo_interno }}"
-                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors"
+                                href="{% url 'rastrear_pedido' %}?guia={{ pedido.grouper }}"
+                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors font-mono text-xs"
                             >
-                                <i class="fa-solid fa-magnifying-glass-location"></i> {{ envio.codigo_rastreo_interno }}
+                                <i class="fa-solid fa-magnifying-glass-location"></i> {{ pedido.grouper }}
                             </a>
                         </td>
                     </tr>

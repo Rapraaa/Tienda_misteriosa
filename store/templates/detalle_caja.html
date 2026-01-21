@@ -43,10 +43,10 @@
                     </h2>
                 </div>
                 <a
-                    href="{% url 'checkout' caja.id %}"
-                    class="px-8 py-4 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap"
+                    href="{% url 'agregar_carrito' caja.id %}"
+                    class="px-8 py-4 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap flex items-center gap-2"
                 >
-                    Comprar Ahora
+                    <i class="fa-solid fa-cart-shopping"></i> Agregar al Carrito
                 </a>
             </div>
             {% endif %}

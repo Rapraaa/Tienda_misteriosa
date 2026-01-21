@@ -1,4 +1,5 @@
 {% load static %}
+{% load auth_extras %}
 <!doctype html>
 <html lang="es" class="dark">
   <head>
@@ -115,7 +116,7 @@
           <a href="{% url 'rastrear_pedido' %}" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
             <i class="fa-solid fa-truck"></i> Rastreo
           </a>
-          {% if user.is_staff %}
+          {% if user.is_staff or user.is_superuser or user|has_group:"Administrador" %}
           {# IMPORTANTE: pb/-mb crea un "puente" de hover para que el menú no se cierre al bajar el mouse #}
           <div class="relative group pb-6 -mb-6">
             <button type="button" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
@@ -123,30 +124,49 @@
             </button>
             <div class="hidden group-hover:block hover:block absolute right-0 top-full mt-0 pt-3 w-64">
               <div class="glass-strong rounded-2xl shadow-glow border border-white/10 overflow-hidden">
+              {% if perms.store.view_envio %}
               <a href="{% url 'envios' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-truck-fast text-mystery-pink w-5 mr-2"></i> Despachos
               </a>
+              {% endif %}
+              {% if perms.store.view_producto %}
               <a href="{% url 'productos' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-boxes-stacked text-mystery-pink w-5 mr-2"></i> Inventario
               </a>
+              {% endif %}
+              {% if perms.store.view_categoria %}
               <a href="{% url 'categorias' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-tags text-mystery-pink w-5 mr-2"></i> Categorías
               </a>
+              {% endif %}
+              {% if perms.store.add_producto %}
               <a href="{% url 'crear_productos' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-plus text-mystery-pink w-5 mr-2"></i> Nuevo producto
               </a>
+              {% endif %}
+              {% if perms.store.add_mystery_box %}
               <a href="{% url 'crear_caja' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-square-plus text-mystery-pink w-5 mr-2"></i> Nueva caja
+              </a>
+              {% endif %}
+              {% if user.is_superuser or user|has_group:"Administrador" %}
+              <a href="{% url 'admin_users_list' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+                <i class="fa-solid fa-users text-mystery-cyan w-5 mr-2"></i> Usuarios
               </a>
               <a href="{% url 'suscripciones' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-users-gear text-mystery-pink w-5 mr-2"></i> Socios
               </a>
+              {% endif %}
+              {% if perms.store.view_cupon %}
               <a href="{% url 'cupones_lista' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-ticket text-mystery-gold w-5 mr-2"></i> Cupones
               </a>
+              {% endif %}
+              {% if user.is_superuser or user|has_group:"Administrador" %}
               <a href="{% url 'audit_log' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-clock-rotate-left text-mystery-pink w-5 mr-2"></i> Logs
               </a>
+              {% endif %}
               </div>
             </div>
           </div>

@@ -47,5 +47,10 @@ urlpatterns = [
     
     # Logs de Auditoría
     path('sistema/logs/', AuditLogView.as_view(), name='audit_log'),
+    
+    # Administración de Usuarios
+    path('gestion/usuarios/', UserListView.as_view(), name='admin_users_list'),
+    path('gestion/usuarios/<int:pk>/editar/', UserUpdateView.as_view(), name='admin_users_edit'),
+    path('gestion/usuarios/<int:pk>/historial/', UserDetailView.as_view(), name='admin_users_detail'),
 ]
 #todo enviar correo con el numero guia, o en la misma pagina

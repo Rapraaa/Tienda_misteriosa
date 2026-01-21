@@ -96,28 +96,41 @@
           <!-- Cupón de descuento -->
           <div class="border-t border-white/10 pt-4 mt-4">
             {% if cupon_codigo %}
-              <div class="glass p-4 rounded-xl border border-green-500/30 bg-green-500/5 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
-                <div class="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
-                  <span class="text-green-400 font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-ticket"></i> 
-                    <span class="tracking-wider">{{ cupon_codigo }}</span>
-                  </span>
-                  <a href="{% url 'remover_cupon' %}" class="text-red-400 hover:text-red-300 text-xs font-semibold px-2 py-1 rounded hover:bg-red-500/10 transition-colors">
-                    <i class="fa-solid fa-xmark"></i> Quitar
-                  </a>
-                </div>
-                <div class="flex justify-between text-sm items-center">
-                  <span class="text-white/60">Descuento aplicado</span>
-                  <span class="text-green-400 font-bold text-lg">-${{ cupon_descuento }}</span>
+              <div class="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-4 mt-4 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-green-500/5 group-hover:bg-green-500/10 transition-colors"></div>
+                <div class="relative flex justify-between items-center z-10">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/30">
+                      <i class="fa-solid fa-ticket text-green-400"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs text-green-300 font-bold uppercase tracking-wider mb-0.5">Cupón Aplicado</div>
+                      <div class="text-white font-mono text-lg font-bold tracking-widest">{{ cupon_codigo }}</div>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-green-400 font-bold text-xl">-${{ cupon_descuento }}</div>
+                    <a href="{% url 'remover_cupon' %}" class="text-red-400 hover:text-red-300 text-[10px] font-bold uppercase tracking-widest hover:underline mt-1 inline-block">Eliminar</a>
+                  </div>
                 </div>
               </div>
             {% else %}
-              <form method="post" action="{% url 'validar_cupon' %}">
+              <form method="post" action="{% url 'validar_cupon' %}" class="mt-4 pt-4 border-t border-white/10">
                 {% csrf_token %}
-                <label class="text-white/70 text-sm mb-2 block">¿Tienes un cupón?</label>
-                <div class="flex gap-2">
-                  <input type="text" name="codigo" placeholder="CODIGO" class="flex-1 px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/50 focus:border-mystery-cyan focus:outline-none text-sm" style="text-transform: uppercase;" required />
-                  <button type="submit" class="px-4 py-2 rounded-lg bg-mystery-cyan/20 border border-mystery-cyan/30 text-mystery-cyan hover:bg-mystery-cyan/30 transition-colors text-sm font-semibold">Aplicar</button>
+                <label class="text-white/60 text-xs uppercase tracking-widest font-bold mb-3 block flex items-center gap-2">
+                    <i class="fa-solid fa-ticket text-mystery-gold"></i> ¿Tienes un código?
+                </label>
+                <div class="relative flex items-center group">
+                  <div class="absolute left-4 text-white/30 group-focus-within:text-mystery-purple transition-colors">
+                    <i class="fa-solid fa-tag"></i>
+                  </div>
+                  <input type="text" name="codigo" placeholder="CÓDIGO DE CUPÓN" 
+                      class="w-full pl-10 pr-24 py-3.5 rounded-xl bg-black/40 border border-white/10 text-white placeholder-white/20 focus:border-mystery-purple/50 focus:ring-1 focus:ring-mystery-purple/50 focus:bg-black/60 focus:outline-none transition-all uppercase font-medium tracking-wider text-sm" 
+                      required />
+                  <button type="submit" 
+                      class="absolute right-1.5 top-1.5 bottom-1.5 px-5 rounded-lg bg-white/5 hover:bg-mystery-purple hover:text-white text-white/60 text-xs font-bold uppercase tracking-widest transition-all border border-white/5 hover:border-mystery-purple hover:shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                      Aplicar
+                  </button>
                 </div>
               </form>
             {% endif %}

@@ -2,7 +2,9 @@ from django.shortcuts import render, get_object_or_404
 from .models import Mystery_Box
 from django.contrib.auth.decorators import login_required, permission_required
 from .models import *
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.models import Group
+from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
 from .forms import ProductoForm, CajaForm, EnvioDespachoForm, CuponForm
@@ -27,19 +29,20 @@ def box(request, id): #COMO LAS CAJAS RECIBEN UN ID PARA VER QUE HACER CON EL HT
     box = get_object_or_404(Mystery_Box, id=id)
     return render(request, "store/templates/detalle_caja.html", {'caja' : box})
     
-class CajaCreateView(LoginRequiredMixin, CreateView, PermissionRequiredMixin): #TODO al crear que mande a un mensaje de exito
-
+class CajaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView): 
     model = Mystery_Box
     form_class = CajaForm
     template_name = 'store/templates/CajaUpdateCreateView.html'
     success_url = reverse_lazy('home')
+    permission_required = 'store.add_mystery_box'
 
 
-class CajaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin): 
+class CajaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView): 
     model = Mystery_Box
     form_class = CajaForm
     template_name = 'store/templates/CajaUpdateCreateView.html'
     success_url = reverse_lazy('home')
+    permission_required = 'store.change_mystery_box'
 
 #!TODO  Poder activar y desactivar una caja
 
@@ -51,20 +54,19 @@ class ProductoListView(LoginRequiredMixin, ListView):
     context_object_name = 'productos'
     #TODO paginacion paginate_by = 10
 
-class ProductoCreateView(LoginRequiredMixin, CreateView, PermissionRequiredMixin):
+class ProductoCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Producto
     form_class = ProductoForm
     template_name = 'store/templates/ProductoCreateView.html'
     success_url = reverse_lazy('productos')
-    #Todo permission_required = 1231
+    permission_required = 'store.add_producto'
 
-class ProductoUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
-    model = Producto #todo revisar que pasa si a un producto que ya esta en una categoria, en una caja, comprado le cambio su
-    #categoria
+class ProductoUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Producto 
     form_class = ProductoForm
     template_name = 'store/templates/ProductoUpdateView.html'
     success_url = reverse_lazy('productos')
-    #Todo permission_required = 1231
+    permission_required = 'store.change_producto'
 
 
 class CategoriaListView(LoginRequiredMixin, ListView):
@@ -77,18 +79,20 @@ class CategoriaListView(LoginRequiredMixin, ListView):
         return Categoria.objects.all().order_by('-activa', 'nombre')
 
 
-class CategoriaCreateView(LoginRequiredMixin, CreateView, PermissionRequiredMixin):
+class CategoriaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Categoria
     fields = ['nombre', 'descripcion']
     template_name = 'store/templates/CategoriaCreateUpdateView.html'
     success_url = reverse_lazy('categorias')
+    permission_required = 'store.add_categoria'
 
 
-class CategoriaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
+class CategoriaUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Categoria
     fields = ['nombre', 'descripcion']
     template_name = 'store/templates/CategoriaCreateUpdateView.html'
     success_url = reverse_lazy('categorias')
+    permission_required = 'store.change_categoria'
 
 
 @login_required
@@ -251,43 +255,50 @@ def compra_exitosa(request, id):
 #todo api para los productos
 
 
-class EnviosListView(ListView):
+class EnviosListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Envio
     template_name = 'store/templates/EnviosListView.html'
     context_object_name = 'envios'
+    permission_required = 'store.view_envio'
 
     def get_queryset(self):
         # CAMBIO por la logica: Ahora select_related usa los campos directos usuario'y 'cajita
-        return Envio.objects.filter(estado='P').select_related('usuario', 'caja').order_by('fecha_envio')
+        return Envio.objects.filter(estado='P').select_related('usuario', 'caja').order_by('fecha_envio', 'codigo_rastreo_interno')
     
 
-class EnviosUpdateView(UpdateView):
+class EnviosUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Envio
     form_class = EnvioDespachoForm
     template_name = 'store/templates/EnviosUpdateView.html'
     success_url = reverse_lazy('envios')
+    permission_required = 'store.change_envio'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        envio = self.object  
+        envio = self.object
+        
+        # Obtener todos los envíos del mismo pedido (mismo código de rastreo)
+        hermanos = Envio.objects.filter(codigo_rastreo_interno=envio.codigo_rastreo_interno)
+        context['envios_hermanos'] = hermanos
+        
         comprador = envio.usuario # el cliente que hizo la compra
         
-
-        context['items_a_empacar'] = envio.productos.all()
+        # Calculamos finanzas para el total del pedido
+        precio_pagado_total = 0
+        costo_real_total = 0
         
+        for h in hermanos:
+             if hasattr(comprador, 'membresia') and comprador.membresia.estado == 'A':
+                 precio_pagado_total += h.caja.precio_suscripcion
+             else:
+                 precio_pagado_total += h.caja.precio_base
+             costo_real_total += h.valor_total
 
-        if hasattr(comprador, 'membresia') and comprador.membresia.estado == 'A':
-            precio_pagado = envio.caja.precio_suscripcion
-        else:
-            precio_pagado = envio.caja.precio_base
-            
-
-        costo_real = envio.valor_total
-        margen = precio_pagado - costo_real
+        margen = precio_pagado_total - costo_real_total
         
         context['finanzas'] = {
-            'pagado': precio_pagado,
-            'costo': costo_real,
+            'pagado': precio_pagado_total,
+            'costo': costo_real_total,
             'margen': margen,
             'es_rentable': margen > 0
         }
@@ -295,9 +306,14 @@ class EnviosUpdateView(UpdateView):
         return context
     
     def form_valid(self, form):
-        """Validar que se hayan seleccionado productos antes de confirmar envío"""
+        """Validar que se hayan seleccionado productos antes de confirmar envío y actualizar todo el grupo"""
         envio = form.instance
         
+        # Validar si estamos enviando (si cambia a Enviado)
+        if envio.estado == 'E' and not envio.numero_guia:
+             form.add_error('numero_guia', 'Debes ingresar una guía para marcar como Enviado')
+             return self.form_invalid(form)
+
         # Si está intentando marcar como "Enviado" pero no tiene productos
         if envio.estado == 'E' and envio.productos.count() == 0:
             messages.error(
@@ -345,13 +361,21 @@ def rastrear_pedido(request):
 
     if guia:
         try:
-            # Buscamos el envío por número de guía
-            envio = Envio.objects.select_related('usuario', 'caja').get(codigo_rastreo_interno=guia)
-        except Envio.DoesNotExist:
-            error = "No encontramos ningún pedido con ese número de guía. Revisa que esté bien escrito."
+            # Buscamos TODOS los envíos con ese número de guía
+            envios = Envio.objects.filter(codigo_rastreo_interno=guia).select_related('usuario', 'caja')
+            
+            if envios.exists():
+                # Si hay varios, tomamos el primero para datos generales, o pasamos la lista
+                envio = envios.first() 
+                # Pasamos 'envios' (plural) también por si el template quiere iterar
+            else:
+                error = "No encontramos ningún pedido con ese número de guía. Revisa que esté bien escrito."
+        except Exception as e:
+            error = "Ocurrió un error al buscar el pedido."
 
     return render(request, 'store/templates/rastreo.html', {
-        'envio': envio,
+        'envio': envio, # Mantenemos compatibilidad con template actual (toma el primero)
+        'envios_lista': envios if 'envios' in locals() and envios.exists() else None, # Lista completa
         'error': error,
         'guia_buscada': guia
     })
@@ -365,7 +389,7 @@ def perfil(request):
     # AHORA: Usamos los campos directos que pusimos en el modelo Envio
     mis_envios = Envio.objects.filter(
         usuario=request.user
-    ).select_related('caja').order_by('-id')
+    ).select_related('caja').order_by('-fecha_envio', 'codigo_rastreo_interno')
     
     return render(request, 'store/templates/profile.html', {
         'mis_envios': mis_envios
@@ -621,40 +645,84 @@ def compra_exitosa_carrito(request):
     # Crear suscripción si no existe
     suscripcion, _ = Suscripcion.objects.get_or_create(usuario=request.user)
     
-    # CAMBIO: Crear UN SOLO Envio con un código único para todo el carrito
-    codigo_unico = generar_id_interno()
+    # Importar función de generación
+    from .utils import generar_caja, generar_id_interno
     
-    # Crear el envío único para todo el carrito
-    envio_unico = Envio.objects.create(
-        usuario=request.user,
-        caja=items[0]['caja'],  # Usamos la primera caja como referencia
-        stripe_session_id=session_id,
-        nombre_receptor=nombre_cliente,
-        direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
-        ciudad=info_direccion.get('city', ''),
-        pais=info_direccion.get('country', ''),
-        codigo_postal=info_direccion.get('postal_code', ''),
-        codigo_rastreo_interno=codigo_unico,  # Código único para todo
-        numero_guia=None,
-        estado='P'
-    )
+    # Procesar cada item del carrito y crear un envío por cada caja física
+    envios_creados = []
     
-    # Generar productos para cada caja y agregarlos al envío único
+    # 1. Generamos UN código único para todo el carrito (todas las cajas comparten envío)
+    codigo_unico_carrito = generar_id_interno()
+    
+    # Capturamos la fecha actual para que todas las cajas tengan EXACTAMENTE la misma marca de tiempo
+    # Esto asegura que se ordenen juntas por fecha
+    from django.utils import timezone
+    fecha_compra = timezone.now()
+    
     for item in items:
-        caja = item['caja']
+        caja_obj = item['caja']
         cantidad = item['cantidad']
         
-        # Por cada caja en el carrito, generar sus productos
+        # Si compró 2 cajas, creamos 2 envíos separados pero con EL MISMO CÓDIGO
         for _ in range(cantidad):
-            generar_caja(envio_unico)  # Esto agrega productos al envío
-    
+            
+            nuevo_envio = Envio.objects.create(
+                usuario=request.user,
+                caja=caja_obj,
+                stripe_session_id=session_id,
+                fecha_envio=fecha_compra,  # Usamos la misma fecha para todo el grupo
+                nombre_receptor=nombre_cliente,
+                direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
+                ciudad=info_direccion.get('city', ''),
+                pais=info_direccion.get('country', ''),
+                codigo_postal=info_direccion.get('postal_code', ''),
+                # USAMOS EL MISMO CÓDIGO PARA TODOS
+                codigo_rastreo_interno=codigo_unico_carrito,
+                numero_guia=None,
+                estado='P'
+            )
+            
+            # Llenar la caja con productos aleatorios
+            try:
+                generar_caja(nuevo_envio)
+            except Exception as e:
+                print(f"Error generando contenido para envío {nuevo_envio.id}: {e}")
+                # Podríamos agregar un mensaje de error o flag, pero al menos no rompe el flujo
+            
+            envios_creados.append(nuevo_envio)
+            
     # Vaciar el carrito
     cart.clear()
     
+    # Registrar uso de cupón si existe
+    if 'cupon_codigo' in request.session:
+        codigo_cupon = request.session['cupon_codigo']
+        try:
+            from .models import Cupon, CuponUso
+            cupon = Cupon.objects.get(codigo=codigo_cupon)
+            
+            # 1. Incrementar contador del cupón
+            cupon.usar()
+            
+            # 2. Registrar historial de uso
+            CuponUso.objects.create(
+                usuario=request.user,
+                cupon=cupon,
+                descuento_aplicado=request.session.get('cupon_descuento', 0)
+            )
+        except Exception as e:
+            print(f"Error registrando uso de cupón: {e}")
+
+    # Limpiar cupón de sesión si existía
+    if 'cupon_codigo' in request.session:
+        del request.session['cupon_codigo']
+    if 'cupon_descuento' in request.session:
+        del request.session['cupon_descuento']
+    
     return render(request, "store/templates/pago_exitoso_carrito.html", {
-        'envio': envio_unico,
-        'codigo_rastreo': codigo_unico,
-        'total_cajas': sum(item['cantidad'] for item in items)
+        'envios': envios_creados,
+        'total_cajas': len(envios_creados),
+        'codigo_rastreo': codigo_unico_carrito
     })
 
 
@@ -817,3 +885,80 @@ class AuditLogView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
             return 'Registro eliminado'
         else:
             return 'Registro modificado'
+
+#! ==================== ADMINISTRACIÓN DE USUARIOS ====================
+
+class UserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = User
+    template_name = 'store/templates/admin/users_list.html'
+    context_object_name = 'users'
+    paginate_by = 20
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser or self.request.user.groups.filter(name='Administrador').exists()
+
+    def get_queryset(self):
+        queryset = User.objects.all().order_by('-date_joined')
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(username__icontains=search_query) | 
+                Q(email__icontains=search_query)
+            )
+        return queryset
+
+
+class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = User
+    fields = ['is_active', 'groups']
+    template_name = 'store/templates/admin/users_form.html'
+    success_url = reverse_lazy('admin_users_list')
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser or self.request.user.groups.filter(name='Administrador').exists()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['all_groups'] = Group.objects.all()
+        return context
+
+
+class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = User
+    template_name = 'store/templates/admin/user_detail.html'
+    context_object_name = 'usuario'
+
+    def test_func(self):
+        return self.request.user.is_staff or self.request.user.is_superuser or self.request.user.groups.filter(name='Administrador').exists()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.object
+        
+        # Envíos del usuario
+        context['envios'] = Envio.objects.filter(usuario=user).order_by('-fecha_envio')
+        
+        # Cupones usados (si existe el modelo CuponUso)
+        try:
+            from .models import CuponUso
+            context['cupones_usados'] = CuponUso.objects.filter(usuario=user).select_related('cupon').order_by('-fecha_uso')
+        except ImportError:
+            context['cupones_usados'] = []
+            
+        # Total gastado (calculado de envíos pagados/completados)
+        # Asumiendo que tenemos acceso al precio en envío o caja
+        total = 0
+        from decimal import Decimal
+        # Nota: Esto es aproximado si no guardamos el precio histórico en Envio.
+        # Mejor usar Stripe payments si disponible, pero por ahora sumaremos valor cajas.
+        # Si Envio no tiene precio, usamos caja.precio_base o suscripcion
+        
+        # Para ser más exactos, podemos mirar los pagos de Stripe si los guardamos, 
+        # pero usaremos una estimación basada en las cajas de sus envíos.
+        for envio in context['envios']:
+             if envio.caja:
+                 total += envio.caja.precio_base # Simplificación
+        
+        context['total_gastado'] = total
+        
+        return context
