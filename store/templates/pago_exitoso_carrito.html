@@ -17,43 +17,53 @@
         ¡Compra confirmada!
       </h1>
       <p class="mt-3 text-white/70 leading-relaxed">
-        Tus cajas ya están en fase de preparación. Guarda tus códigos de rastreo.
+        Tu pedido de <span class="font-bold text-mystery-gold">{{ total_cajas }}</span> caja{{ total_cajas|pluralize }} ya está en preparación.
       </p>
 
-      <!-- Lista de envíos -->
-      <div class="mt-8 space-y-4">
-        {% for envio in envios %}
-        <div class="glass rounded-2xl border border-white/10 p-6 text-left">
-          <div class="flex items-start justify-between gap-4">
-            <div class="flex-1">
-              <h3 class="text-lg font-extrabold">{{ envio.caja.nombre }}</h3>
-              <p class="text-white/60 text-sm mt-1">{{ envio.caja.descripcion|truncatechars:60 }}</p>
-            </div>
-            <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-              <i class="fa-solid fa-box-open text-mystery-cyan text-xl"></i>
-            </div>
-          </div>
-
-          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p class="text-white/55 text-xs uppercase tracking-widest">Código interno</p>
-              <p class="mt-2 font-mono text-xl tracking-widest text-mystery-gold">{{ envio.codigo_rastreo_interno }}</p>
-            </div>
-            <div class="flex items-end justify-end">
-              <a href="{% url 'rastrear_pedido' %}?guia={{ envio.codigo_rastreo_interno }}" class="inline-flex items-center gap-2 text-sm font-semibold text-mystery-cyan hover:text-white transition-colors">
-                Ver rastreo <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
+      <!-- Código único de rastreo -->
+      <div class="mt-8 glass rounded-3xl border border-white/10 p-8">
+        <div class="flex items-center justify-center gap-4 mb-4">
+          <div class="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+            <i class="fa-solid fa-barcode text-mystery-gold text-3xl"></i>
           </div>
         </div>
-        {% endfor %}
+        
+        <p class="text-white/55 text-xs uppercase tracking-widest mb-3">Código de rastreo único</p>
+        <p class="font-mono text-3xl tracking-widest text-mystery-gold font-extrabold mb-4">{{ codigo_rastreo }}</p>
+        
+        <p class="text-white/60 text-sm leading-relaxed mb-4">
+          Todas tus cajas se enviarán juntas con este código de rastreo.
+        </p>
+        
+        <a href="{% url 'rastrear_pedido' %}?guia={{ codigo_rastreo }}" class="inline-flex items-center gap-2 text-sm font-semibold text-mystery-cyan hover:text-white transition-colors">
+          Ver rastreo <i class="fa-solid fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <!-- Resumen del pedido -->
+      <div class="mt-6 glass rounded-2xl border border-white/10 p-6 text-left">
+        <p class="text-white/55 text-xs uppercase tracking-widest mb-4">Resumen del pedido</p>
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm">
+            <span class="text-white/70">Total de cajas:</span>
+            <span class="font-bold">{{ total_cajas }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-white/70">Productos incluidos:</span>
+            <span class="font-bold">{{ envio.productos.count }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-white/70">Estado:</span>
+            <span class="text-mystery-cyan font-bold">Preparando caja</span>
+          </div>
+        </div>
       </div>
 
       <!-- Información adicional -->
-      <div class="mt-8 glass rounded-2xl border border-white/10 p-6">
+      <div class="mt-6 glass rounded-2xl border border-white/10 p-6">
         <p class="text-white/55 text-xs uppercase tracking-widest mb-3">Siguiente paso</p>
         <p class="text-white/70 text-sm leading-relaxed">
-          Guarda tus códigos. Si ya tienes guía de courier, aparecerá en la pantalla de rastreo.
+          Guarda tu código. Si ya tienes guía de courier, aparecerá en la pantalla de rastreo.
         </p>
       </div>
 

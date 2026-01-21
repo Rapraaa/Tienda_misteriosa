@@ -121,3 +121,89 @@ class EnvioDespachoForm(forms.ModelForm):
             self.add_error('numero_guia', 'No puedes marcar como "Enviado" sin ingresar un número de guía.')
 
         return cleaned_data
+
+
+class CuponForm(forms.ModelForm):
+    class Meta:
+        model = Cupon
+        fields = ['codigo', 'descuento_porcentaje', 'descuento_fijo', 'activo', 
+                  'fecha_inicio', 'fecha_expiracion', 'usos_maximos', 'solo_premium', 'monto_minimo']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'cyber-input', 'placeholder': 'CODIGO20', 'style': 'text-transform: uppercase;'}),
+            'descuento_porcentaje': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0', 'max': '100'}),
+            'descuento_fijo': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0', 'step': '0.01'}),
+            'activo': forms.CheckboxInput(attrs={'class': 'cyber-checkbox'}),
+            'fecha_inicio': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'cyber-input'}),
+            'fecha_expiracion': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'cyber-input'}),
+            'usos_maximos': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '1'}),
+            'solo_premium': forms.CheckboxInput(attrs={'class': 'cyber-checkbox'}),
+            'monto_minimo': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0', 'step': '0.01'}),
+        }
+        labels = {
+            'codigo': 'Código', 
+            'descuento_porcentaje': 'Descuento %', 
+            'descuento_fijo': 'Descuento $',
+            'activo': 'Activo', 
+            'fecha_inicio': 'Inicio', 
+            'fecha_expiracion': 'Expiración',
+            'usos_maximos': 'Usos Máximos', 
+            'solo_premium': 'Solo Premium', 
+            'monto_minimo': 'Monto Mínimo'
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Si es nuevo cupón, establecer fecha de inicio a ahora
+        if not self.instance.pk:
+            from django.utils import timezone
+            self.initial['fecha_inicio'] = timezone.now()
+    
+    def clean_codigo(self):
+        codigo = self.cleaned_data.get('codigo', '')
+        return codigo.upper()  # Forzar mayúsculas
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        porcentaje = cleaned_data.get('descuento_porcentaje')
+        fijo = cleaned_data.get('descuento_fijo')
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_expiracion = cleaned_data.get('fecha_expiracion')
+        
+        # Validar que al menos un descuento esté configurado
+        if porcentaje == 0 and fijo == 0:
+            raise forms.ValidationError('Debes configurar al menos un tipo de descuento')
+        
+        # Validar fechas
+        if fecha_inicio and fecha_expiracion:
+            from django.utils import timezone
+            
+            # La expiración debe ser posterior al inicio
+            if fecha_inicio >= fecha_expiracion:
+                raise forms.ValidationError('La fecha de expiración debe ser posterior a la de inicio')
+            
+            # La expiración debe ser futura (solo para nuevos cupones o al editar)
+            if fecha_expiracion <= timezone.now():
+                raise forms.ValidationError('La fecha de expiración debe ser en el futuro')
+        
+        return cleaned_data
+
+    class Meta:
+        model = Cupon
+        fields = ["codigo", "descuento_porcentaje", "descuento_fijo", "activo", "fecha_inicio", "fecha_expiracion", "usos_maximos", "solo_premium", "monto_minimo"]
+        widgets = {
+            "codigo": forms.TextInput(attrs={"class": "cyber-input", "placeholder": "CODIGO20"}),
+            "descuento_porcentaje": forms.NumberInput(attrs={"class": "cyber-input", "min": "0", "max": "100"}),
+            "descuento_fijo": forms.NumberInput(attrs={"class": "cyber-input", "min": "0", "step": "0.01"}),
+            "activo": forms.CheckboxInput(attrs={"class": "cyber-checkbox"}),
+            "fecha_inicio": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "cyber-input"}),
+            "fecha_expiracion": forms.DateTimeInput(attrs={"type": "datetime-local", "class": "cyber-input"}),
+            "usos_maximos": forms.NumberInput(attrs={"class": "cyber-input", "min": "1"}),
+            "solo_premium": forms.CheckboxInput(attrs={"class": "cyber-checkbox"}),
+            "monto_minimo": forms.NumberInput(attrs={"class": "cyber-input", "min": "0", "step": "0.01"}),
+        }
+        labels = {
+            "codigo": "Código", "descuento_porcentaje": "Descuento %", "descuento_fijo": "Descuento $",
+            "activo": "Activo", "fecha_inicio": "Inicio", "fecha_expiracion": "Expiración",
+            "usos_maximos": "Usos Máximos", "solo_premium": "Solo Premium", "monto_minimo": "Monto Mínimo"
+        }
+

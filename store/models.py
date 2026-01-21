@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from django.utils import timezone
 from django.contrib.auth.models import User
 from decimal import Decimal
+from simple_history.models import HistoricalRecords
 
 # Create your models here.
 class Producto(models.Model):#TODO Explicar para que es el models.Model
@@ -113,6 +114,70 @@ class CarritoItem(models.Model):
         es_premium = es_usuario_premium(self.usuario)
         precio = self.caja.precio_suscripcion if es_premium else self.caja.precio_base
         return precio * self.cantidad
+
+class Cupon(models.Model):
+    """Modelo para cupones de descuento"""
+    codigo = models.CharField(max_length=50, unique=True, verbose_name="Código del cupón")
+    descuento_porcentaje = models.IntegerField(default=0, help_text="Descuento en porcentaje (0-100)")
+    descuento_fijo = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Descuento fijo en dólares")
+    activo = models.BooleanField(default=True)
+    fecha_inicio = models.DateTimeField()
+    fecha_expiracion = models.DateTimeField()
+    usos_maximos = models.IntegerField(null=True, blank=True, help_text="Dejar vacío para usos ilimitados")
+    usos_actuales = models.IntegerField(default=0)
+    solo_premium = models.BooleanField(default=False, help_text="Solo para usuarios premium")
+    monto_minimo = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Monto mínimo de compra")
+    history = HistoricalRecords()  # Historial de cambios
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.descuento_porcentaje}% / ${self.descuento_fijo}"
+    
+    def es_valido(self, usuario=None, monto_compra=0):
+        """Valida si el cupón puede ser usado"""
+        from django.utils import timezone
+        from .utils import es_usuario_premium
+        
+        ahora = timezone.now()
+        
+        # Verificar si está activo
+        if not self.activo:
+            return False, "Este cupón no está activo"
+        
+        # Verificar fechas
+        if ahora < self.fecha_inicio:
+            return False, "Este cupón aún no es válido"
+        if ahora > self.fecha_expiracion:
+            return False, "Este cupón ha expirado"
+        
+        # Verificar usos
+        if self.usos_maximos and self.usos_actuales >= self.usos_maximos:
+            return False, "Este cupón ha alcanzado el límite de usos"
+        
+        # Verificar si es solo para premium
+        if self.solo_premium and usuario:
+            if not es_usuario_premium(usuario):
+                return False, "Este cupón es solo para usuarios premium"
+        
+        # Verificar monto mínimo
+        if monto_compra < self.monto_minimo:
+            return False, f"El monto mínimo de compra es ${self.monto_minimo}"
+        
+        return True, "Cupón válido"
+    
+    def calcular_descuento(self, monto):
+        """Calcula el descuento a aplicar"""
+        if self.descuento_porcentaje > 0:
+            descuento = monto * (Decimal(self.descuento_porcentaje) / Decimal(100))
+        else:
+            descuento = self.descuento_fijo
+        
+        # El descuento no puede ser mayor al monto total
+        return min(descuento, monto)
+    
+    def usar(self):
+        """Incrementa el contador de usos"""
+        self.usos_actuales += 1
+        self.save()
 
 #todo que valga el boton de cancelar y todos los botones
 #todo CONCENTRARNOS AHORITA EN NO AGREGAR NADA NUEVO, SOLO ARREGLAR Y QUE TODO SIRVA BIEN DE LO QUE YA TENEMOS

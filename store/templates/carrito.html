@@ -93,10 +93,45 @@
           </div>
           {% endif %}
           
+          <!-- Cupón de descuento -->
+          <div class="border-t border-white/10 pt-4 mt-4">
+            {% if cupon_codigo %}
+              <div class="glass p-4 rounded-xl border border-green-500/30 bg-green-500/5 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+                <div class="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
+                  <span class="text-green-400 font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-ticket"></i> 
+                    <span class="tracking-wider">{{ cupon_codigo }}</span>
+                  </span>
+                  <a href="{% url 'remover_cupon' %}" class="text-red-400 hover:text-red-300 text-xs font-semibold px-2 py-1 rounded hover:bg-red-500/10 transition-colors">
+                    <i class="fa-solid fa-xmark"></i> Quitar
+                  </a>
+                </div>
+                <div class="flex justify-between text-sm items-center">
+                  <span class="text-white/60">Descuento aplicado</span>
+                  <span class="text-green-400 font-bold text-lg">-${{ cupon_descuento }}</span>
+                </div>
+              </div>
+            {% else %}
+              <form method="post" action="{% url 'validar_cupon' %}">
+                {% csrf_token %}
+                <label class="text-white/70 text-sm mb-2 block">¿Tienes un cupón?</label>
+                <div class="flex gap-2">
+                  <input type="text" name="codigo" placeholder="CODIGO" class="flex-1 px-4 py-2 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/50 focus:border-mystery-cyan focus:outline-none text-sm" style="text-transform: uppercase;" required />
+                  <button type="submit" class="px-4 py-2 rounded-lg bg-mystery-cyan/20 border border-mystery-cyan/30 text-mystery-cyan hover:bg-mystery-cyan/30 transition-colors text-sm font-semibold">Aplicar</button>
+                </div>
+              </form>
+            {% endif %}
+          </div>
+          
           <div class="border-t border-white/10 pt-3 mt-3">
             <div class="flex justify-between items-center">
               <span class="text-lg font-semibold">Total</span>
-              <span class="text-3xl font-extrabold text-mystery-gold">${{ total }}</span>
+              <div class="text-right">
+                {% if cupon_descuento > 0 %}
+                  <div class="text-sm text-white/50 line-through decoration-red-400 decoration-2">${{ total }}</div>
+                {% endif %}
+                <span class="text-3xl font-extrabold text-mystery-gold">${{ total_final|default:total }}</span>
+              </div>
             </div>
           </div>
         </div>

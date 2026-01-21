@@ -1,0 +1,106 @@
+{% extends "index.html" %}
+
+{% block title %}Logs de Auditoría | Mysterio{% endblock %}
+
+{% block contenido %}
+<section class="max-w-7xl mx-auto px-4 md:px-6 py-16">
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-extrabold">
+      <i class="fa-solid fa-clock-rotate-left text-mystery-cyan"></i> Logs de Auditoría
+    </h1>
+    <p class="text-white/60 text-sm mt-2">Historial de cambios en el sistema</p>
+  </div>
+
+  <div class="glass-strong rounded-3xl border border-white/10 overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-white/5 border-b border-white/10">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Fecha</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Modelo</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Objeto</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Acción</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Usuario</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cambios</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        {% for log in logs %}
+        <tr class="hover:bg-white/5 transition-colors">
+          <td class="px-6 py-4 text-sm">
+            <div class="text-white">{{ log.date|date:"d/m/Y" }}</div>
+            <div class="text-white/50 text-xs">{{ log.date|date:"H:i:s" }}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full bg-mystery-cyan/20 text-mystery-cyan text-xs font-bold">
+              {{ log.model }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm font-mono">
+            {{ log.object }}
+          </td>
+          <td class="px-6 py-4">
+            {% if log.action == 'Creado' %}
+              <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">
+                <i class="fa-solid fa-plus"></i> {{ log.action }}
+              </span>
+            {% elif log.action == 'Modificado' %}
+              <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">
+                <i class="fa-solid fa-pen"></i> {{ log.action }}
+              </span>
+            {% elif log.action == 'Eliminado' %}
+              <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">
+                <i class="fa-solid fa-trash"></i> {{ log.action }}
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 text-sm">
+            {% if log.user %}
+              <i class="fa-solid fa-user text-mystery-gold"></i> {{ log.user.username }}
+            {% else %}
+              <span class="text-white/50">Sistema</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 text-sm text-white/70">
+            {{ log.changes }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center text-white/50">
+            <i class="fa-solid fa-inbox text-4xl mb-3"></i>
+            <p>No hay registros de auditoría</p>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  {% if is_paginated %}
+  <div class="mt-6 flex justify-center gap-2">
+    {% if page_obj.has_previous %}
+      <a href="?page=1" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+        <i class="fa-solid fa-angles-left"></i>
+      </a>
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+        <i class="fa-solid fa-angle-left"></i>
+      </a>
+    {% endif %}
+    
+    <span class="px-4 py-2 rounded-lg bg-mystery-cyan/20 text-mystery-cyan border border-mystery-cyan/30">
+      Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+        <i class="fa-solid fa-angle-right"></i>
+      </a>
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
+        <i class="fa-solid fa-angles-right"></i>
+      </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

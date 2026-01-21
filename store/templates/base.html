@@ -141,6 +141,12 @@
               <a href="{% url 'suscripciones' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-users-gear text-mystery-pink w-5 mr-2"></i> Socios
               </a>
+              <a href="{% url 'cupones_lista' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+                <i class="fa-solid fa-ticket text-mystery-gold w-5 mr-2"></i> Cupones
+              </a>
+              <a href="{% url 'audit_log' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+                <i class="fa-solid fa-clock-rotate-left text-mystery-pink w-5 mr-2"></i> Logs
+              </a>
               </div>
             </div>
           </div>
@@ -182,6 +188,23 @@
         </div>
       </div>
     </nav>
+
+    <!-- Mensajes Flash de Django -->
+    {% if messages %}
+      <div class="max-w-7xl mx-auto px-4 mt-6">
+        {% for message in messages %}
+          <div class="p-4 mb-4 rounded-xl border flex items-center gap-3
+            {% if message.tags == 'error' %}bg-red-500/10 border-red-500/30 text-red-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+            {% if message.tags == 'error' %}
+              <i class="fa-solid fa-circle-exclamation"></i>
+            {% else %}
+              <i class="fa-solid fa-circle-check"></i>
+            {% endif %}
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
     <main class="pt-24">
       {% block contenido %}{% endblock %}

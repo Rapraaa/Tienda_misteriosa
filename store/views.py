@@ -5,7 +5,7 @@ from .models import *
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
-from .forms import ProductoForm, CajaForm, EnvioDespachoForm #imprtamos el form que hicimos
+from .forms import ProductoForm, CajaForm, EnvioDespachoForm, CuponForm
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
@@ -13,6 +13,7 @@ from .utils import generar_caja, generar_id_interno, es_usuario_premium
 from django.shortcuts import render
 from .cart import Cart  # Importar la clase Cart
 from django.http import JsonResponse  # Para respuestas AJAX
+from django.contrib import messages  # Para mensajes de validación
 # Create your views here.
 stripe.api_key = settings.STRIPE_SECRET_KEY #! mi api
 
@@ -293,6 +294,21 @@ class EnviosUpdateView(UpdateView):
         
         return context
     
+    def form_valid(self, form):
+        """Validar que se hayan seleccionado productos antes de confirmar envío"""
+        envio = form.instance
+        
+        # Si está intentando marcar como "Enviado" pero no tiene productos
+        if envio.estado == 'E' and envio.productos.count() == 0:
+            messages.error(
+                self.request, 
+                '❌ Debe seleccionar al menos un producto antes de confirmar el envío'
+            )
+            return self.form_invalid(form)
+        
+        messages.success(self.request, '✅ Envío actualizado correctamente')
+        return super().form_valid(form)
+    
 #todo validar al comprar la caja que no se puedda comprar si esta esta inactiva, ya que aunque el boton se bloquea si entro por el link pues pene
 #todo IMPORTANTISIMO, que en el home los usuarios vean solo las activas, solo alguien con permisos las inactivas
 #todo GRUPOS Bodeguero, meten y administran productos, (podria ser crear cajas, activar y sedasctivar pero creo que por seguridad eso deberia poder solo el gerente)
@@ -454,15 +470,26 @@ def agregar_al_carrito(request, id):
 
 
 def ver_carrito(request):
-    """Muestra la página del carrito"""
+    """Muestra la página del carrito con cupones"""
+    from decimal import Decimal
     cart = Cart(request)
     items = cart.get_items()
     total = cart.get_total()
     
+    # Obtener cupón de la sesión
+    cupon_codigo = request.session.get('cupon_codigo')
+    cupon_descuento = Decimal(str(request.session.get('cupon_descuento', 0)))
+    
+    # Calcular total final
+    total_final = total - cupon_descuento if cupon_descuento > 0 else total
+    
     return render(request, 'store/templates/carrito.html', {
         'items': items,
         'total': total,
-        'cart_count': cart.get_count()
+        'cart_count': cart.get_count(),
+        'cupon_codigo': cupon_codigo,
+        'cupon_descuento': cupon_descuento,
+        'total_final': total_final
     })
 
 
@@ -523,6 +550,25 @@ def checkout_carrito(request):
             'quantity': cantidad,
         })
     
+    # Verificar si hay cupón en la sesión
+    cupon_descuento = request.session.get('cupon_descuento', 0)
+    cupon_codigo = request.session.get('cupon_codigo')
+    discounts = []
+    
+    if cupon_descuento > 0 and cupon_codigo:
+        try:
+            # Crear cupón en Stripe al vuelo
+            cupon_stripe = stripe.Coupon.create(
+                amount_off=int(float(cupon_descuento) * 100),
+                currency='usd',
+                duration='once',
+                name=f"Cupón {cupon_codigo}"
+            )
+            discounts = [{'coupon': cupon_stripe.id}]
+        except Exception as e:
+            print(f"Error creando cupón Stripe: {e}")
+            # Si falla, proceder sin descuento o manejar error (opcional)
+
     try:
         # Crear sesión de checkout en Stripe
         checkout_session = stripe.checkout.Session.create(
@@ -530,6 +576,7 @@ def checkout_carrito(request):
             shipping_address_collection={'allowed_countries': ['EC', 'US']},
             line_items=line_items,
             mode='payment',
+            discounts=discounts,  # Aplicar descuento
             success_url=f'{dominio}/carrito/compra-exitosa/?session_id={{CHECKOUT_SESSION_ID}}',
             cancel_url=f'{dominio}/carrito/',
         )
@@ -574,35 +621,199 @@ def compra_exitosa_carrito(request):
     # Crear suscripción si no existe
     suscripcion, _ = Suscripcion.objects.get_or_create(usuario=request.user)
     
-    # Crear un Envio por cada caja en el carrito
-    envios_creados = []
+    # CAMBIO: Crear UN SOLO Envio con un código único para todo el carrito
+    codigo_unico = generar_id_interno()
+    
+    # Crear el envío único para todo el carrito
+    envio_unico = Envio.objects.create(
+        usuario=request.user,
+        caja=items[0]['caja'],  # Usamos la primera caja como referencia
+        stripe_session_id=session_id,
+        nombre_receptor=nombre_cliente,
+        direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
+        ciudad=info_direccion.get('city', ''),
+        pais=info_direccion.get('country', ''),
+        codigo_postal=info_direccion.get('postal_code', ''),
+        codigo_rastreo_interno=codigo_unico,  # Código único para todo
+        numero_guia=None,
+        estado='P'
+    )
+    
+    # Generar productos para cada caja y agregarlos al envío único
     for item in items:
         caja = item['caja']
         cantidad = item['cantidad']
         
-        # Crear múltiples envíos si la cantidad es mayor a 1
+        # Por cada caja en el carrito, generar sus productos
         for _ in range(cantidad):
-            nuevo_envio = Envio.objects.create(
-                usuario=request.user,
-                caja=caja,
-                stripe_session_id=session_id,
-                nombre_receptor=nombre_cliente,
-                direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
-                ciudad=info_direccion.get('city', ''),
-                pais=info_direccion.get('country', ''),
-                codigo_postal=info_direccion.get('postal_code', ''),
-                codigo_rastreo_interno=generar_id_interno(),
-                numero_guia=None,
-                estado='P'
-            )
-            generar_caja(nuevo_envio)
-            envios_creados.append(nuevo_envio)
+            generar_caja(envio_unico)  # Esto agrega productos al envío
     
     # Vaciar el carrito
     cart.clear()
     
     return render(request, "store/templates/pago_exitoso_carrito.html", {
-        'envios': envios_creados
+        'envio': envio_unico,
+        'codigo_rastreo': codigo_unico,
+        'total_cajas': sum(item['cantidad'] for item in items)
     })
 
 
+# Append to views.py
+
+#! ==================== SISTEMA DE CUPONES ====================
+
+def validar_cupon(request):
+    """Valida un cupón y lo guarda en la sesión"""
+    if request.method == 'POST':
+        codigo_cupon = request.POST.get('codigo', '').strip().upper()
+        if not codigo_cupon:
+            messages.error(request, 'Ingresa un código de cupón')
+            return redirect('ver_carrito')
+        try:
+            from .models import Cupon
+            cupon = Cupon.objects.get(codigo=codigo_cupon)
+        except Cupon.DoesNotExist:
+            messages.error(request, f'El cupón "{codigo_cupon}" no es válido')
+            return redirect('ver_carrito')
+        cart = Cart(request)
+        total = cart.get_total()
+        es_valido, mensaje = cupon.es_valido(request.user if request.user.is_authenticated else None, total)
+        if not es_valido:
+            messages.error(request, mensaje)
+            return redirect('ver_carrito')
+        descuento = cupon.calcular_descuento(total)
+        request.session['cupon_codigo'] = codigo_cupon
+        request.session['cupon_descuento'] = float(descuento)
+        messages.success(request, f'✅ Cupón {codigo_cupon} aplicado: ${descuento} de descuento')
+        return redirect('ver_carrito')
+    return redirect('ver_carrito')
+
+def remover_cupon(request):
+    """Remueve el cupón de la sesión"""
+    if 'cupon_codigo' in request.session:
+        del request.session['cupon_codigo']
+    if 'cupon_descuento' in request.session:
+        del request.session['cupon_descuento']
+    messages.info(request, 'Cupón removido')
+    return redirect('ver_carrito')
+# CRUD de Cupones - Agregar al final de views.py
+
+class CuponListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = Cupon
+    template_name = 'store/templates/cupones/lista.html'
+    context_object_name = 'cupones'
+    permission_required = 'store.view_cupon'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        return Cupon.objects.all().order_by('-fecha_inicio')
+
+
+class CuponCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = Cupon
+    form_class = CuponForm
+    template_name = 'store/templates/cupones/form.html'
+    permission_required = 'store.add_cupon'
+    success_url = reverse_lazy('cupones_lista')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'✅ Cupón {form.instance.codigo} creado exitosamente')
+        return super().form_valid(form)
+
+
+class CuponUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Cupon
+    form_class = CuponForm
+    template_name = 'store/templates/cupones/form.html'
+    permission_required = 'store.change_cupon'
+    success_url = reverse_lazy('cupones_lista')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'✅ Cupón {form.instance.codigo} actualizado')
+        return super().form_valid(form)
+
+
+class CuponDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Cupon
+    template_name = 'store/templates/cupones/confirmar_eliminar.html'
+    permission_required = 'store.delete_cupon'
+    success_url = reverse_lazy('cupones_lista')
+    
+    def delete(self, request, *args, **kwargs):
+        cupon = self.get_object()
+        messages.success(request, f'🗑️ Cupón {cupon.codigo} eliminado')
+        return super().delete(request, *args, **kwargs)
+
+
+class CuponDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
+    model = Cupon
+    template_name = 'store/templates/cupones/detalle.html'
+    permission_required = 'store.view_cupon'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Obtener historial de cambios
+        context['historial'] = self.object.history.all()[:20]
+        return context
+
+
+# Vista de Logs de Auditoría
+class AuditLogView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    """Vista para mostrar logs de auditoría de todos los modelos"""
+    template_name = 'store/templates/admin/audit_log.html'
+    permission_required = 'store.view_cupon'
+    paginate_by = 50
+    context_object_name = 'logs'
+    
+    def get_queryset(self):
+        from django.contrib.contenttypes.models import ContentType
+        
+        # Obtener historial de todos los modelos
+        logs = []
+        
+        # Cupones
+        from .models import Cupon
+        if hasattr(Cupon, 'history'):
+            for record in Cupon.history.all()[:50]:
+                logs.append({
+                    'model': 'Cupón',
+                    'object': record.codigo,
+                    'action': self.get_action_display(record.history_type),
+                    'user': record.history_user,
+                    'date': record.history_date,
+                    'changes': self.get_changes(record)
+                })
+        
+        # Envios
+        from .models import Envio
+        if hasattr(Envio, 'history'):
+            for record in Envio.history.all()[:50]:
+                logs.append({
+                    'model': 'Envío',
+                    'object': record.codigo_rastreo_interno or f'Envío #{record.id}',
+                    'action': self.get_action_display(record.history_type),
+                    'user': record.history_user,
+                    'date': record.history_date,
+                    'changes': self.get_changes(record)
+                })
+        
+        # Ordenar por fecha
+        logs.sort(key=lambda x: x['date'], reverse=True)
+        return logs[:self.paginate_by]
+    
+    def get_action_display(self, history_type):
+        actions = {
+            '+': 'Creado',
+            '~': 'Modificado',
+            '-': 'Eliminado'
+        }
+        return actions.get(history_type, 'Desconocido')
+    
+    def get_changes(self, record):
+        """Obtiene los cambios realizados"""
+        if record.history_type == '+':
+            return 'Registro creado'
+        elif record.history_type == '-':
+            return 'Registro eliminado'
+        else:
+            return 'Registro modificado'

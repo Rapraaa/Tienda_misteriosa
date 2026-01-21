@@ -1,0 +1,93 @@
+{% extends "index.html" %}
+
+{% block title %}Cupones | Mysterio{% endblock %}
+
+{% block contenido %}
+<section class="max-w-6xl mx-auto px-4 md:px-6 py-16">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold">Gestión de Cupones</h1>
+      <p class="text-white/60 text-sm mt-2">Administra cupones de descuento</p>
+    </div>
+    <a href="{% url 'cupon_crear' %}" class="px-6 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2">
+      <i class="fa-solid fa-plus"></i> Nuevo Cupón
+    </a>
+  </div>
+
+  {% if cupones %}
+  <div class="glass-strong rounded-3xl border border-white/10 overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-white/5 border-b border-white/10">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Código</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Descuento</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Vigencia</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Usos</th>
+          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
+          <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-white/10">
+        {% for cupon in cupones %}
+        <tr class="hover:bg-white/5 transition-colors">
+          <td class="px-6 py-4">
+            <span class="font-mono font-bold text-mystery-gold">{{ cupon.codigo }}</span>
+          </td>
+          <td class="px-6 py-4">
+            {% if cupon.descuento_porcentaje > 0 %}
+              <span class="text-mystery-cyan">{{ cupon.descuento_porcentaje }}%</span>
+            {% else %}
+              <span class="text-mystery-cyan">${{ cupon.descuento_fijo }}</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div>{{ cupon.fecha_inicio|date:"d/m/Y" }}</div>
+            <div class="text-white/50">{{ cupon.fecha_expiracion|date:"d/m/Y" }}</div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="text-sm">{{ cupon.usos_actuales }}</span>
+            {% if cupon.usos_maximos %}
+              <span class="text-white/50">/ {{ cupon.usos_maximos }}</span>
+            {% else %}
+              <span class="text-white/50">/ ∞</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4">
+            {% if cupon.activo %}
+              <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">Activo</span>
+            {% else %}
+              <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex gap-2 justify-end">
+              <a href="{% url 'cupon_detalle' cupon.pk %}" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-mystery-cyan" title="Ver">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              <a href="{% url 'cupon_editar' cupon.pk %}" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-mystery-gold" title="Editar">
+                <i class="fa-solid fa-edit"></i>
+              </a>
+              <a href="{% url 'cupon_eliminar' cupon.pk %}" class="p-2 rounded-lg hover:bg-white/10 transition-colors text-red-400" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="glass rounded-3xl border border-white/10 p-12 text-center">
+    <div class="h-20 w-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+      <i class="fa-solid fa-ticket text-white/30 text-4xl"></i>
+    </div>
+    <h2 class="text-2xl font-extrabold mb-3">No hay cupones</h2>
+    <p class="text-white/60 mb-6">Crea tu primer cupón de descuento</p>
+    <a href="{% url 'cupon_crear' %}" class="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform">
+      <i class="fa-solid fa-plus"></i> Crear Cupón
+    </a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

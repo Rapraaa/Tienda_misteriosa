@@ -33,6 +33,19 @@ urlpatterns = [
     path('carrito/eliminar/<int:id>/', eliminar_del_carrito, name='eliminar_carrito'),
     path('carrito/checkout/', checkout_carrito, name='checkout_carrito'),
     path('carrito/compra-exitosa/', compra_exitosa_carrito, name='compra_exitosa_carrito'),
-
+    
+    # Cupones
+    path('cupon/validar/', validar_cupon, name='validar_cupon'),
+    path('cupon/remover/', remover_cupon, name='remover_cupon'),
+    
+    # Gestión de Cupones
+    path('cupones/', CuponListView.as_view(), name='cupones_lista'),
+    path('cupones/crear/', CuponCreateView.as_view(), name='cupon_crear'),
+    path('cupones/<int:pk>/', CuponDetailView.as_view(), name='cupon_detalle'),
+    path('cupones/<int:pk>/editar/', CuponUpdateView.as_view(), name='cupon_editar'),
+    path('cupones/<int:pk>/eliminar/', CuponDeleteView.as_view(), name='cupon_eliminar'),
+    
+    # Logs de Auditoría
+    path('sistema/logs/', AuditLogView.as_view(), name='audit_log'),
 ]
 #todo enviar correo con el numero guia, o en la misma pagina

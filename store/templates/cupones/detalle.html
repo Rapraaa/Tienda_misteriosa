@@ -1,0 +1,155 @@
+{% extends "index.html" %}
+
+{% block title %}{{ object.codigo }} | Mysterio{% endblock %}
+
+{% block contenido %}
+<section class="max-w-5xl mx-auto px-4 md:px-6 py-16">
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold">Cupón: {{ object.codigo }}</h1>
+      <p class="text-white/60 text-sm mt-2">Detalles e historial del cupón</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'cupon_editar' object.pk %}" class="px-6 py-3 rounded-full bg-mystery-gold/20 border border-mystery-gold/30 text-mystery-gold font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform">
+        <i class="fa-solid fa-edit"></i> Editar
+      </a>
+      <a href="{% url 'cupones_lista' %}" class="px-6 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest">
+        <i class="fa-solid fa-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Detalles del cupón -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="glass-strong rounded-3xl border border-white/10 p-6">
+        <h2 class="text-xl font-extrabold mb-6">Información del Cupón</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-white/50 text-xs mb-1">Código</p>
+            <p class="font-mono font-bold text-2xl text-mystery-gold">{{ object.codigo }}</p>
+          </div>
+          
+          <div>
+            <p class="text-white/50 text-xs mb-1">Descuento</p>
+            {% if object.descuento_porcentaje > 0 %}
+              <p class="font-bold text-2xl text-mystery-cyan">{{ object.descuento_porcentaje }}%</p>
+            {% else %}
+              <p class="font-bold text-2xl text-mystery-cyan">${{ object.descuento_fijo }}</p>
+            {% endif %}
+          </div>
+          
+          <div>
+            <p class="text-white/50 text-xs mb-1">Fecha de Inicio</p>
+            <p class="font-semibold">{{ object.fecha_inicio|date:"d/m/Y H:i" }}</p>
+          </div>
+          
+          <div>
+            <p class="text-white/50 text-xs mb-1">Fecha de Expiración</p>
+            <p class="font-semibold">{{ object.fecha_expiracion|date:"d/m/Y H:i" }}</p>
+          </div>
+          
+          <div>
+            <p class="text-white/50 text-xs mb-1">Usos</p>
+            <p class="font-semibold">
+              {{ object.usos_actuales }}
+              {% if object.usos_maximos %}
+                / {{ object.usos_maximos }}
+              {% else %}
+                / ∞
+              {% endif %}
+            </p>
+          </div>
+          
+          <div>
+            <p class="text-white/50 text-xs mb-1">Monto Mínimo</p>
+            <p class="font-semibold">${{ object.monto_minimo }}</p>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex gap-4">
+          {% if object.activo %}
+            <span class="px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-bold">
+              <i class="fa-solid fa-check-circle"></i> Activo
+            </span>
+          {% else %}
+            <span class="px-4 py-2 rounded-full bg-red-500/20 text-red-400 text-sm font-bold">
+              <i class="fa-solid fa-times-circle"></i> Inactivo
+            </span>
+          {% endif %}
+          
+          {% if object.solo_premium %}
+            <span class="px-4 py-2 rounded-full bg-mystery-pink/20 text-mystery-pink text-sm font-bold">
+              <i class="fa-solid fa-crown"></i> Solo Premium
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Historial de cambios -->
+      {% if historial %}
+      <div class="glass-strong rounded-3xl border border-white/10 p-6">
+        <h2 class="text-xl font-extrabold mb-6">
+          <i class="fa-solid fa-clock-rotate-left text-mystery-cyan"></i> Historial de Cambios
+        </h2>
+        
+        <div class="space-y-3">
+          {% for record in historial %}
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="font-semibold">{{ record.history_user|default:"Sistema" }}</span>
+                <span class="text-white/50 text-sm ml-2">
+                  {% if record.history_type == "+" %}
+                    <span class="text-green-400">Creado</span>
+                  {% elif record.history_type == "~" %}
+                    <span class="text-mystery-cyan">Modificado</span>
+                  {% elif record.history_type == "-" %}
+                    <span class="text-red-400">Eliminado</span>
+                  {% endif %}
+                </span>
+              </div>
+              <span class="text-white/50 text-xs">{{ record.history_date|date:"d/m/Y H:i" }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="lg:col-span-1">
+      <div class="glass-strong rounded-3xl border border-white/10 p-6 sticky top-6">
+        <h2 class="text-xl font-extrabold mb-6">Estadísticas</h2>
+        
+        <div class="space-y-4">
+          <div class="p-4 rounded-xl bg-white/5">
+            <p class="text-white/50 text-xs mb-1">Total de Usos</p>
+            <p class="text-3xl font-extrabold text-mystery-gold">{{ object.usos_actuales }}</p>
+          </div>
+          
+          <div class="p-4 rounded-xl bg-white/5">
+            <p class="text-white/50 text-xs mb-1">Usos Restantes</p>
+            {% if object.usos_maximos %}
+              <p class="text-3xl font-extrabold text-mystery-cyan">{{ object.usos_maximos|add:"-object.usos_actuales" }}</p>
+            {% else %}
+              <p class="text-3xl font-extrabold text-mystery-cyan">∞</p>
+            {% endif %}
+          </div>
+          
+          <div class="p-4 rounded-xl bg-white/5">
+            <p class="text-white/50 text-xs mb-1">Estado</p>
+            {% if object.activo %}
+              <p class="text-2xl font-bold text-green-400">Activo</p>
+            {% else %}
+              <p class="text-2xl font-bold text-red-400">Inactivo</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
