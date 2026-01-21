@@ -1,73 +1,57 @@
 {% extends "index.html" %} {% block contenido %}
-<div class="container" style="margin-top: 120px">
-    <h2 class="section-title">Productos Registrados</h2>
+<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <h2 class="text-2xl md:text-3xl font-extrabold">
+            Gestión de <span class="text-mystery-cyan">Inventario</span>
+        </h2>
+        <a
+            href="{% url 'crear_productos' %}"
+            class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300"
+        >
+            + Nuevo Producto
+        </a>
+    </div>
 
-    <table class="mysterio-table">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Valor</th>
-                <th>Stock</th>
-                <th style="text-align: center">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td>{{ producto.nombre }}</td>
-                <td>
-                    {% for categoria in producto.categoria.all %}
-                    <span class="badge {% cycle 'badge-cyan' 'badge-pink' 'badge-purple' %}">
-                        {{ categoria.nombre }}
-                    </span>
-                    {% empty %}
-                    <span style="color: grey; font-style: italic">Sin categoría</span>
+    <div class="glass-card rounded-2xl overflow-hidden border border-white/10">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-white/10">
+                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
+                            Producto
+                        </th>
+                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">Stock</th>
+                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
+                            Valor Base
+                        </th>
+                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6">{{ producto.nombre }}</td>
+                        <td
+                            class="py-4 px-6 {% if producto.stock < 5 %}text-mystery-pink font-semibold{% else %}text-white{% endif %}"
+                        >
+                            {{ producto.stock }}
+                        </td>
+                        <td class="py-4 px-6">${{ producto.valor }}</td>
+                        <td class="py-4 px-6">
+                            <a
+                                href="{% url 'editar_producto' producto.pk %}"
+                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors"
+                            >
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                            </a>
+                        </td>
+                    </tr>
                     {% endfor %}
-                </td>
-                <td>${{ producto.valor }}</td>
-                <td>{{ producto.stock }}</td>
-                <td style="text-align: center">
-                    <a href="{% url 'editar_producto' producto.pk %}" class="btn-icon btn-edit" title="Editar">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align: center">No hay productos registrados aún.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-
-<style>
-    .btn-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        font-size: 1rem;
-    }
-
-    /* Estilo botón Editar (Cyan Neón) */
-    .btn-edit {
-        background: rgba(0, 212, 255, 0.1);
-        color: var(--highlight);
-        border: 1px solid var(--highlight);
-        box-shadow: 0 0 5px rgba(0, 212, 255, 0.2);
-    }
-
-    .btn-edit:hover {
-        background: var(--highlight);
-        color: #000;
-        box-shadow: 0 0 15px var(--highlight);
-        transform: translateY(-2px);
-    }
-</style>
 {% endblock %}

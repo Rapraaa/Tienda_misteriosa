@@ -1,101 +1,64 @@
-{% extends "index.html" %} {% block contenido %}
-<div class="container" style="margin-top: 120px; max-width: 700px">
-    <h2 class="section-title">Registrar Nuevo Producto</h2>
+{% extends "index.html" %}
 
-    <div class="mystery-card" style="text-align: left">
-        <form method="post">
-            {% csrf_token %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} producto | Mysterio{% endblock %}
 
-            <div class="form-group">{{ form.nombre.label_tag }} {{ form.nombre }}</div>
+{% block contenido %}
+<section class="max-w-4xl mx-auto px-4 md:px-6 py-16">
+  <div class="glass-strong rounded-3xl border border-white/10 shadow-glow overflow-hidden">
+    <div class="px-6 md:px-10 py-8 md:py-10">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold">
+            {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %}
+            <span class="bg-gradient-to-r from-mystery-cyan to-mystery-pink bg-clip-text text-transparent">Producto</span>
+          </h1>
+          <p class="mt-2 text-white/65 text-sm">Controla nombre, stock, valor y categorías del inventario.</p>
+        </div>
+        <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+          <i class="fa-solid fa-boxes-stacked text-mystery-gold text-xl"></i>
+        </div>
+      </div>
 
-            <div class="form-group">{{ form.valor.label_tag }} {{ form.valor }}</div>
+      <form method="post" class="mystery-form mt-8 space-y-6">
+        {% csrf_token %}
 
-            <div class="form-group">{{ form.stock.label_tag }} {{ form.stock }}</div>
+        {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest text-white/70 mb-2">
+            {{ field.label }}
+          </label>
 
-            <div class="form-group">
-                <label class="glow-label">{{ form.categoria.label }}</label>
-
-                <div class="checkbox-grid">
-                    {% for checkbox in form.categoria %}
-                    <div class="checkbox-item">
-                        {{ checkbox.tag }}
-                        <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                    </div>
-                    {% endfor %}
-                </div>
+          {% if field.name == 'categoria' %}
+          {# CheckboxSelectMultiple: lo renderizamos como chips clicables usando subwidgets de Django #}
+          <div class="glass rounded-2xl border border-white/10 p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {% for checkbox in field %}
+              <label class="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                {{ checkbox.tag }}
+                <span class="text-sm font-semibold text-white/85">{{ checkbox.choice_label }}</span>
+              </label>
+              {% endfor %}
             </div>
+          </div>
+          {% else %}
+            {{ field }}
+          {% endif %}
 
-            <div style="text-align: center; margin-top: 30px">
-                <button type="submit" class="btn btn-primary">Guardar</button>
-            </div>
-        </form>
+          {% if field.errors %}{{ field.errors }}{% endif %}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text|safe }}</span>{% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="pt-2 flex flex-col sm:flex-row gap-3">
+          <a href="{% url 'productos' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-xs uppercase tracking-widest inline-flex items-center justify-center gap-2">
+            <i class="fa-solid fa-arrow-left text-mystery-cyan"></i> Cancelar
+          </a>
+          <button type="submit" class="flex-1 px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
+      </form>
     </div>
-</div>
-
-<style>
-    /* Estilos Generales del Form */
-    .form-group {
-        margin-bottom: 25px;
-    }
-    label {
-        color: var(--highlight);
-        font-weight: 600;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    /* Inputs de Texto y Numero */
-    .cyber-input {
-        width: 100%;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--primary);
-        color: white;
-        border-radius: 8px;
-    }
-    .cyber-input:focus {
-        outline: none;
-        box-shadow: 0 0 15px var(--primary);
-    }
-
-    /* --- ESTILO DE LOS CHECKBOXES --- */
-    .checkbox-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* Columnas automáticas */
-        gap: 15px;
-        margin-top: 10px;
-    }
-
-    /* Ocultamos el cuadrito feo original del checkbox */
-    .checkbox-item input[type="checkbox"] {
-        display: none;
-    }
-
-    /* Estilizamos la etiqueta para que parezca un botón */
-    .checkbox-item label {
-        display: block;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        color: var(--text-muted);
-        margin: 0; /* Quitamos margen interno */
-    }
-
-    /* CUANDO ESTÁ SELECCIONADO (El input checked afecta al label vecino) */
-    .checkbox-item input[type="checkbox"]:checked + label {
-        background: rgba(242, 0, 137, 0.2); /* Fondo rosado */
-        border-color: var(--accent);
-        color: white;
-        box-shadow: 0 0 10px var(--accent);
-        font-weight: bold;
-    }
-
-    .checkbox-item label:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-</style>
+  </div>
+</section>
 {% endblock %}

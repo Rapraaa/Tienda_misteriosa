@@ -64,6 +64,41 @@ class ProductoUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin
     #Todo permission_required = 1231
 
 
+class CategoriaListView(LoginRequiredMixin, ListView):
+    model = Categoria
+    template_name = 'store/templates/CategoriaListView.html'
+    context_object_name = 'categorias'
+
+    def get_queryset(self):
+        # Mostrar todas para poder reactivar/desactivar sin borrar
+        return Categoria.objects.all().order_by('-activa', 'nombre')
+
+
+class CategoriaCreateView(LoginRequiredMixin, CreateView, PermissionRequiredMixin):
+    model = Categoria
+    fields = ['nombre', 'descripcion']
+    template_name = 'store/templates/CategoriaCreateUpdateView.html'
+    success_url = reverse_lazy('categorias')
+
+
+class CategoriaUpdateView(LoginRequiredMixin, UpdateView, PermissionRequiredMixin):
+    model = Categoria
+    fields = ['nombre', 'descripcion']
+    template_name = 'store/templates/CategoriaCreateUpdateView.html'
+    success_url = reverse_lazy('categorias')
+
+
+@login_required
+@permission_required('store.change_categoria', raise_exception=True)
+def categoria_toggle_activa(request, pk):
+    # No se borra: se desactiva/activa para no romper relaciones ManyToMany existentes
+    categoria = get_object_or_404(Categoria, pk=pk)
+    if request.method == 'POST':
+        categoria.activa = not categoria.activa
+        categoria.save(update_fields=['activa'])
+    return redirect('categorias')
+
+
 class SuscripcionListView(LoginRequiredMixin, ListView): #todo esto ed envios global, queremos que cada usuario pueda ver su propio historial
     model = Suscripcion
     template_name = 'store/templates/SuscripcionListView.html'
@@ -221,9 +256,8 @@ class EnviosListView(ListView):
     context_object_name = 'envios'
 
     def get_queryset(self):
-        # Filtramos solo lo que está en preparacion
-        # Usamos select_related para traer los datos del usuario y la caja de una vez
-        return Envio.objects.filter(estado='P').select_related('suscripcion__usuario', 'suscripcion__caja').order_by('fecha_envio')
+        # CAMBIO por la logica: Ahora select_related usa los campos directos usuario'y 'cajita
+        return Envio.objects.filter(estado='P').select_related('usuario', 'caja').order_by('fecha_envio')
     
 
 class EnviosUpdateView(UpdateView):
@@ -240,7 +274,7 @@ class EnviosUpdateView(UpdateView):
         context['items_a_empacar'] = envio.productos.all()
         
         #calcula el margen de ganancia o perdida
-        precio_pagado = envio.suscripcion.caja.monthly_price
+        precio_pagado = envio.caja.monthly_price
         costo_real = envio.valor_total
         margen = precio_pagado - costo_real
         
@@ -305,15 +339,15 @@ def rastrear_pedido(request):
 
 @login_required
 def perfil(request):
-
-    mis_envios = Envio.objects.filter( #filtarmos envios que la suscripcion sea el usuario actual
-        suscripcion__usuario=request.user
-    ).select_related('suscripcion__caja').order_by('-id') #ordenamos de mas recientes a mas viejos
+    # ANTES: Envio.objects.filter(suscripcion__usuario=request.user).select_related('suscripcion__caja')
+    # AHORA: Usamos los campos directos que pusimos en el modelo Envio
+    mis_envios = Envio.objects.filter(
+        usuario=request.user
+    ).select_related('caja').order_by('-id')
     
     return render(request, 'store/templates/profile.html', {
         'mis_envios': mis_envios
     })
-
 #todo si se llama domenica puede usar el cupon de kamasutra
 
 #todo, hacer carrito de compras, y que se pueda agregar cosas al carrito de compras sin iniciar sesion pero que ya de ahi para pagar pida iniciar sesion y se pasen las cosas
@@ -378,3 +412,4 @@ def membresia_exitosa(request):
     suscripcion.save()
 
     return render(request, 'store/templates/membresia_confirmada.html')
+

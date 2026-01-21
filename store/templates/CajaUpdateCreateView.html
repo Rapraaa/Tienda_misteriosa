@@ -1,345 +1,77 @@
-{% extends "index.html" %} {% block contenido %}
+{% extends "index.html" %}
 
-<div class="container detail-container">
-    <a href="{% url 'home' %}" class="back-link"> <i class="fa-solid fa-arrow-left"></i> Volver al inventario </a>
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} caja | Mysterio{% endblock %}
 
-    <div class="glass-panel detail-grid">
-        <div class="visual-side">
-            <div class="floating-icon-large">
-                <i class="fa-solid fa-box-open"></i>
+{% block contenido %}
+<section class="max-w-5xl mx-auto px-4 md:px-6 py-16">
+  <div class="glass-strong rounded-3xl border border-white/10 shadow-glow overflow-hidden">
+    <div class="px-6 md:px-10 py-8 md:py-10">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold">
+            {% if form.instance.pk %}Editar{% else %}Nueva{% endif %}
+            <span class="bg-gradient-to-r from-mystery-gold to-mystery-gold-dark bg-clip-text text-transparent">Caja</span>
+          </h1>
+          <p class="mt-2 text-white/65 text-sm">
+            Define precio, exclusividad, categorías permitidas, estado y descripción.
+          </p>
+        </div>
+        <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+          <i class="fa-solid fa-gift text-mystery-cyan text-xl"></i>
+        </div>
+      </div>
+
+      <form method="post" class="mystery-form mt-8 space-y-6">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest text-white/70 mb-2">
+            {{ field.label }}
+          </label>
+
+          {% if field.name == 'allowed_categories' %}
+          <div class="glass rounded-2xl border border-white/10 p-4">
+            <p class="text-white/60 text-xs mb-3">Selecciona una o varias categorías.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {% for checkbox in field %}
+              <label class="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                {{ checkbox.tag }}
+                <span class="text-sm font-semibold text-white/85">{{ checkbox.choice_label }}</span>
+              </label>
+              {% endfor %}
             </div>
-            <div class="glow-effect"></div>
+          </div>
+          {% elif field.name == 'estado' %}
+          <div class="glass rounded-2xl border border-white/10 p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {% for radio in field %}
+              <label class="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                {{ radio.tag }}
+                <span class="text-sm font-semibold text-white/85">{{ radio.choice_label }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% else %}
+            {{ field }}
+          {% endif %}
+
+          {% if field.errors %}{{ field.errors }}{% endif %}
+          {% if field.help_text %}<span class="helptext">{{ field.help_text|safe }}</span>{% endif %}
         </div>
+        {% endfor %}
 
-        <div class="info-side">
-            <h1 class="box-title">
-                {% if form.instance.pk %} Editar Caja: {{ form.instance.nombre }} {% else %} Nueva Caja Misteriosa
-                {%endif %}
-            </h1>
-
-            <div class="separator"></div>
-
-            <form method="post" class="creation-form" enctype="multipart/form-data">
-                {% csrf_token %} {% if form.non_field_errors %}
-                <div class="alert-error" style="margin-bottom: 20px">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    {{ form.non_field_errors }}
-                </div>
-                {% endif %}
-
-                <div class="form-group">
-                    <label>{{ form.nombre.label }}</label>
-                    {{ form.nombre }} {{ form.nombre.errors }}
-                </div>
-
-                <div class="form-group">
-                    <label>{{ form.descripcion.label }}</label>
-                    {{ form.descripcion }} {{ form.descripcion.errors }}
-                </div>
-
-                <div class="form-group">
-                    <label>{{ form.monthly_price.label }}</label>
-                    <div class="input-icon-wrapper">
-                        <i class="fa-solid fa-dollar-sign input-icon"></i>
-                        {{ form.monthly_price }}
-                    </div>
-                    {{ form.monthly_price.errors }}
-                </div>
-
-                <div class="form-group">
-                    <label class="glow-label">{{ form.estado.label }}</label>
-                    <div class="radio-group-container">
-                        {% for radio in form.estado %}
-                        <div class="radio-option">
-                            {{ radio.tag }}
-                            <label for="{{ radio.id_for_label }}">
-                                <span class="radio-circle"></span>
-                                {{ radio.choice_label }}
-                            </label>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {{ form.estado.errors }}
-                    <small class="help-text">Si seleccionas "Inactivo", la caja no podrá ser comprada.</small>
-                </div>
-
-                <div class="form-group">
-                    <label class="glow-label">{{ form.allowed_categories.label }}</label>
-
-                    <div class="categories-grid">
-                        {% for checkbox in form.allowed_categories %}
-                        <div class="checkbox-item">
-                            {{ checkbox.tag }}
-                            <label for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if form.allowed_categories.errors %}
-                    <div class="alert-error">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        Debes seleccionar al menos una categoría.
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="price-action-area" style="margin-top: 40px">
-                    <button type="submit" class="btn btn-primary btn-lg btn-glow">
-                        <i class="fa-solid fa-save"></i> Guardar Caja
-                    </button>
-                </div>
-            </form>
+        <div class="pt-2 flex flex-col sm:flex-row gap-3">
+          <a href="{% url 'home' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-xs uppercase tracking-widest inline-flex items-center justify-center gap-2">
+            <i class="fa-solid fa-arrow-left text-mystery-cyan"></i> Cancelar
+          </a>
+          <button type="submit" class="flex-1 px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+          </button>
         </div>
+      </form>
     </div>
-</div>
-
-<style>
-    /* --- Estilos Generales --- */
-    .detail-container {
-        padding-top: 120px;
-        padding-bottom: 50px;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 30px;
-        overflow: hidden;
-        width: 100%;
-        max-width: 1100px;
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-    }
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 40% 60%;
-    }
-
-    /* Visual Side */
-    .visual-side {
-        background: linear-gradient(135deg, rgba(106, 0, 244, 0.1), rgba(0, 0, 0, 0));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        min-height: 100%;
-    }
-    .floating-icon-large {
-        font-size: 8rem;
-        background: -webkit-linear-gradient(var(--highlight), var(--accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: float 6s infinite ease-in-out;
-        z-index: 2;
-    }
-    .glow-effect {
-        position: absolute;
-        width: 200px;
-        height: 200px;
-        background: var(--primary);
-        filter: blur(80px);
-        opacity: 0.3;
-        border-radius: 50%;
-        z-index: 1;
-    }
-
-    /* Info Side */
-    .info-side {
-        padding: 50px;
-    }
-    .box-title {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        color: white;
-    }
-    .separator {
-        height: 1px;
-        background: rgba(255, 255, 255, 0.1);
-        margin: 20px 0;
-    }
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    label {
-        display: block;
-        color: var(--highlight);
-        font-weight: 600;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .help-text {
-        display: block;
-        color: var(--text-muted);
-        font-size: 0.8rem;
-        margin-top: 5px;
-    }
-
-    /* Inputs */
-    .cyber-input {
-        width: 100%;
-        padding: 15px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        color: white;
-        font-family: "Poppins", sans-serif;
-        transition: 0.3s;
-    }
-    .cyber-input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 15px rgba(242, 0, 137, 0.2);
-        background: rgba(0, 0, 0, 0.5);
-    }
-    .input-icon-wrapper {
-        position: relative;
-    }
-    .input-icon {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-    }
-    .input-icon-wrapper .cyber-input {
-        padding-left: 40px;
-    }
-
-    /* Radio Buttons (Estado) */
-    .radio-group-container {
-        display: flex;
-        gap: 20px;
-        background: rgba(0, 0, 0, 0.2);
-        padding: 10px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .radio-option {
-        flex: 1;
-        position: relative;
-    }
-    .radio-option input[type="radio"] {
-        display: none;
-    }
-    .radio-option label {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 1px solid transparent;
-        background: rgba(255, 255, 255, 0.05);
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-    }
-    .radio-option input[type="radio"]:checked + label {
-        background: rgba(0, 212, 255, 0.1);
-        border-color: var(--highlight);
-        color: white;
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-        font-weight: bold;
-    }
-    .radio-circle {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid var(--text-muted);
-        transition: 0.3s;
-    }
-    .radio-option input[type="radio"]:checked + label .radio-circle {
-        background: var(--highlight);
-        border-color: var(--highlight);
-        box-shadow: 0 0 10px var(--highlight);
-    }
-
-    /* Categories Grid */
-    .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-    }
-    .checkbox-item input[type="checkbox"] {
-        display: none;
-    }
-    .checkbox-item label {
-        display: block;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        color: var(--text-muted);
-        margin: 0;
-        font-size: 0.85rem;
-    }
-    .checkbox-item input[type="checkbox"]:checked + label {
-        background: rgba(0, 212, 255, 0.15);
-        border-color: var(--highlight);
-        color: white;
-        box-shadow: 0 0 10px var(--highlight);
-        font-weight: bold;
-    }
-    .checkbox-item label:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .alert-error {
-        color: #ff3860;
-        font-size: 0.9rem;
-        font-weight: bold;
-        margin-top: 15px;
-        padding: 12px;
-        background: rgba(255, 56, 96, 0.1);
-        border: 1px solid #ff3860;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .back-link {
-        position: absolute;
-        top: 100px;
-        left: 20px;
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .back-link:hover {
-        color: var(--highlight);
-        transform: translateX(-5px);
-    }
-
-    .btn-lg {
-        width: 100%;
-        padding: 15px;
-        font-size: 1.1rem;
-        border-radius: 12px;
-    }
-
-    @media (max-width: 900px) {
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-        .visual-side {
-            display: none;
-        }
-        .info-side {
-            padding: 20px 0;
-        }
-    }
-</style>
+  </div>
+</section>
 {% endblock %}

@@ -16,3 +16,15 @@ def registro(request):
         form = UserCreationForm() #parentesis? para instanciarlo
     return render(request, 'users/templates/registration/registro.html', {'form':form}) #mandamos como parametro el formulario, como es eso de mandar
 
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            usuario = form.save()
+            login(request, usuario)
+            return redirect('home') # Redirigimos al inicio tras el éxito
+    else:
+        form = UserCreationForm()
+    
+    # Asegúrate de que la ruta del template sea correcta según tu estructura
+    return render(request, 'registration/registro.html', {'form': form})

@@ -3,6 +3,12 @@ from django import forms
 from .models import *
 
 class ProductoForm(forms.ModelForm): #aca definimos un form
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo categorías activas para evitar conflictos al desactivar
+        if 'categoria' in self.fields:
+            self.fields['categoria'].queryset = Categoria.objects.filter(activa=True).order_by('nombre')
+
     class Meta:#debemos meter en meta
         model = Producto #como si fuera un mixin normal
         fields = ['nombre', 'valor', 'stock', 'categoria']
@@ -27,6 +33,12 @@ class ProductoForm(forms.ModelForm): #aca definimos un form
     #ahora en el views hay que decir que use este form en vez de el por defecto
 
 class CajaForm(forms.ModelForm): #aca definimos un form #TODO que haya un tipo stock de cajas pero que revise si hay el producto suficiente para armar una caja
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo categorías activas para evitar conflictos al desactivar
+        if 'allowed_categories' in self.fields:
+            self.fields['allowed_categories'].queryset = Categoria.objects.filter(activa=True).order_by('nombre')
+
     class Meta:
         model = Mystery_Box
         fields = ['nombre', 'precio_base', 'porcentaje_descuento', 'es_exclusiva', 'allowed_categories', 'estado', 'descripcion']

@@ -1,43 +1,28 @@
 {% extends "index.html" %} {% block contenido %}
-<div class="container" style="margin-top: 150px; text-align: center">
-    <div
-        class="error-card"
-        style="
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid red;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-        "
-    >
-        <i class="fa-solid fa-triangle-exclamation" style="font-size: 4rem; color: #ff4444; margin-bottom: 20px"></i>
+<div class="max-w-2xl mx-auto px-4 md:px-6 py-20 text-center min-h-screen flex items-center justify-center">
+    <div class="glass-card rounded-3xl border-2 border-red-500/30 p-8 md:p-12 max-w-lg shadow-2xl shadow-red-500/10">
+        <i class="fa-solid fa-circle-exclamation text-6xl md:text-7xl text-red-500 mb-6"></i>
+        <h2 class="text-2xl md:text-3xl font-extrabold mb-4">Transacción Interrumpida</h2>
+        <p class="text-gray-400 mb-8">Hubo un problema con la pasarela de pagos de Stripe:</p>
 
-        <h2 style="color: white; margin-bottom: 20px">Ups, algo salió mal</h2>
-
-        <p style="color: #ccc; font-size: 1.1rem">El sistema de pagos reportó el siguiente error:</p>
-
-        <div
-            style="
-                background: #220000;
-                padding: 15px;
-                border-radius: 8px;
-                font-family: monospace;
-                color: #ff8888;
-                margin: 20px 0;
-                word-break: break-all;
-            "
-        >
+        <div class="bg-black/40 p-6 rounded-xl font-mono text-red-300 mb-8 border border-red-500/20 break-words">
             {{ error }}
         </div>
 
-        <a
-            href="{% url 'home' %}"
-            class="btn btn-ghost"
-            style="border: 1px solid white; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px"
-        >
-            Volver al inicio
-        </a>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+                href="{% url 'home' %}"
+                class="px-6 py-3 rounded-full border-2 border-white/20 text-white font-semibold text-sm uppercase tracking-wide hover:bg-white/5 transition-colors"
+            >
+                Ir al Inicio
+            </a>
+            <button
+                onclick="history.back()"
+                class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300"
+            >
+                Reintentar Pago
+            </button>
+        </div>
     </div>
 </div>
 {% endblock %}

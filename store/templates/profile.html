@@ -1,193 +1,75 @@
 {% extends 'index.html' %} {% block contenido %}
-<style>
-    /* Tarjeta de Perfil (Cabecera) */
-    .profile-card {
-        background: var(--glass);
-        padding: 40px;
-        border-radius: 20px;
-        border: var(--border-glow);
-        display: flex;
-        align-items: center;
-        gap: 30px;
-        margin-bottom: 40px;
-    }
-
-    .avatar-circle {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, var(--highlight), var(--accent));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 3rem;
-        color: white;
-        box-shadow: 0 0 20px rgba(var(--highlight-rgb), 0.3);
-    }
-
-    /* Tabla de Pedidos */
-    .orders-container {
-        background: var(--glass);
-        padding: 30px;
-        border-radius: 20px;
-        border: var(--border-glow);
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 15px; /* Espacio entre filas */
-    }
-
-    th {
-        text-align: left;
-        color: var(--text-muted);
-        font-weight: 500;
-        padding: 10px 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    td {
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.03);
-        vertical-align: middle;
-    }
-
-    /* Bordes redondeados para las filas */
-    tr td:first-child {
-        border-radius: 15px 0 0 15px;
-    }
-    tr td:last-child {
-        border-radius: 0 15px 15px 0;
-    }
-
-    tr:hover td {
-        background: rgba(255, 255, 255, 0.06);
-    }
-
-    /* Badges de Estado */
-    .status-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: bold;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .status-p {
-        background: rgba(255, 165, 0, 0.15);
-        color: orange;
-        border: 1px solid orange;
-    }
-    .status-e {
-        background: rgba(46, 204, 113, 0.15);
-        color: #2ecc71;
-        border: 1px solid #2ecc71;
-    }
-    .status-r {
-        background: rgba(52, 152, 219, 0.15);
-        color: #3498db;
-        border: 1px solid #3498db;
-    }
-</style>
-
-<div class="container" style="padding-top: 120px; padding-bottom: 50px">
-    <div class="profile-card">
-        <div class="avatar-circle">{{ user.username|first|upper }}</div>
+<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
+    <!-- User Profile Card -->
+    <div class="glass-card rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-8">
+        <div
+            class="w-20 h-20 rounded-full bg-mystery-purple-gradient flex items-center justify-center text-3xl font-extrabold flex-shrink-0"
+        >
+            {{ user.username|first|upper }}
+        </div>
         <div>
-            <h2 style="margin: 0; color: white">
-                Hola, <span style="color: var(--highlight)">{{ user.username }}</span>
-            </h2>
-            <p style="color: var(--text-muted); margin-top: 5px">{{ user.email }}</p>
-            <div style="margin-top: 10px">
-                <span
-                    style="
-                        font-size: 0.9rem;
-                        background: rgba(255, 255, 255, 0.1);
-                        padding: 5px 10px;
-                        border-radius: 8px;
-                    "
-                >
-                    <i class="fa-solid fa-calendar"></i> Miembro desde: {{ user.date_joined|date:"M Y" }}
-                </span>
-            </div>
+            <h2 class="text-2xl md:text-3xl font-bold mb-1">{{ user.username }}</h2>
+            <p class="text-gray-400 text-sm md:text-base">{{ user.email }}</p>
         </div>
     </div>
 
-    <div class="orders-container">
-        <h3 style="margin-bottom: 25px; color: var(--highlight); display: flex; align-items: center; gap: 10px">
-            <i class="fa-solid fa-box-archive"></i> Mis Misterios
-        </h3>
+    <!-- Membership Card -->
+    <div
+        class="bg-mystery-purple/10 border-2 border-mystery-purple rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+    >
+        <div>
+            <h3 class="text-mystery-cyan mb-2 text-lg md:text-xl font-semibold">
+                <i class="fa-solid fa-crown"></i> Mysterio Pass
+            </h3>
+            {% if user.membresia.estado == 'A' %}
+            <p class="text-sm md:text-base">
+                Tu membresía está <strong class="text-mystery-success">ACTIVA</strong>. Vence el: {{
+                user.membresia.fecha_proximo_pago|date:"d M Y" }}
+            </p>
+            {% else %}
+            <p class="text-gray-400 text-sm md:text-base">No tienes una membresía activa actualmente.</p>
+            {% endif %}
+        </div>
+        {% if user.membresia.estado != 'A' %}
+        <a
+            href="{% url 'suscribirse_premium' %}"
+            class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap"
+        >
+            Activar por $9.99
+        </a>
+        {% endif %}
+    </div>
 
+    <!-- Orders Card -->
+    <div class="glass-card rounded-2xl p-6 md:p-8">
+        <h3 class="text-xl md:text-2xl font-bold mb-6"><i class="fa-solid fa-history"></i> Mis Pedidos</h3>
         {% if mis_envios %}
-        <div class="table-responsive">
-            <table>
+        <div class="overflow-x-auto">
+            <table class="w-full">
                 <thead>
-                    <tr>
-                        <th>Caja / Suscripción</th>
-                        <th>Fecha</th>
-                        <th>Estado Actual</th>
-                        <th>Código Rastreo</th>
-                        <th>Acción</th>
+                    <tr class="text-left border-b border-white/10">
+                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Caja</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Fecha</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Estado</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Rastreo</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for envio in mis_envios %}
-                    <tr>
-                        <td>
-                            <strong style="font-size: 1.1rem; color: white">{{ envio.suscripcion.caja.nombre }}</strong>
-                            <div style="font-size: 0.8rem; color: var(--text-muted)">
-                                ID Suscripción: #{{ envio.suscripcion.id }}
-                            </div>
+                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-4">{{ envio.caja.nombre }}</td>
+                        <td class="py-4 px-4 text-gray-400">{{ envio.fecha_envio|date:"d M Y" }}</td>
+                        <td class="py-4 px-4">
+                            <span class="bg-white/10 px-3 py-1 rounded-lg text-xs md:text-sm">
+                                {{ envio.get_estado_display }}
+                            </span>
                         </td>
-
-                        <td style="color: #ccc">
-                            <i class="fa-regular fa-clock"></i> {{ envio.fecha_creacion|date:"d M, Y" }}
-                        </td>
-
-                        <td>
-                            {% if envio.estado == 'P' %}
-                            <span class="status-badge status-p"><i class="fa-solid fa-box"></i> Preparando</span>
-                            {% elif envio.estado == 'E' %}
-                            <span class="status-badge status-e"><i class="fa-solid fa-truck-fast"></i> En Camino</span>
-                            {% else %}
-                            <span class="status-badge status-r"><i class="fa-solid fa-house-check"></i> Recibido</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            <code
-                                style="
-                                    font-size: 1rem;
-                                    color: var(--accent);
-                                    background: rgba(0, 0, 0, 0.3);
-                                    padding: 5px 8px;
-                                    border-radius: 5px;
-                                "
-                            >
-                                {{ envio.codigo_rastreo_interno }}
-                            </code>
-                        </td>
-
-                        <td>
+                        <td class="py-4 px-4">
                             <a
                                 href="{% url 'rastrear_pedido' %}?guia={{ envio.codigo_rastreo_interno }}"
-                                class="btn btn-sm"
-                                style="
-                                    background: var(--highlight);
-                                    color: white;
-                                    padding: 10px 20px;
-                                    border-radius: 10px;
-                                    text-decoration: none;
-                                    box-shadow: 0 4px 15px rgba(var(--highlight-rgb), 0.2);
-                                "
+                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors"
                             >
-                                <i class="fa-solid fa-magnifying-glass-location"></i> Rastrear
+                                <i class="fa-solid fa-magnifying-glass-location"></i> {{ envio.codigo_rastreo_interno }}
                             </a>
                         </td>
                     </tr>
@@ -196,15 +78,10 @@
             </table>
         </div>
         {% else %}
-        <div style="text-align: center; padding: 50px 20px">
-            <i
-                class="fa-solid fa-ghost"
-                style="font-size: 4rem; color: rgba(255, 255, 255, 0.1); margin-bottom: 20px"
-            ></i>
-            <h4 style="color: var(--text-muted)">Aún no tienes pedidos activos.</h4>
-            <p style="color: #666; margin-bottom: 30px">Suscríbete a una caja misteriosa para empezar la aventura.</p>
-            <a href="{% url 'home' %}" class="btn btn-primary">Ver Cajas Disponibles</a>
-        </div>
+        <p class="text-center text-gray-400 py-12">
+            Aún no has comprado ninguna caja.
+            <a href="{% url 'home' %}" class="text-mystery-cyan hover:underline">¡Explora el catálogo!</a>
+        </p>
         {% endif %}
     </div>
 </div>

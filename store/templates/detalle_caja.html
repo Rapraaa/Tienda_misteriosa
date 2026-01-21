@@ -1,330 +1,56 @@
 {% extends "index.html" %} {% block contenido %}
-
-<div class="container detail-container">
-    <a href="{% url 'home' %}" class="back-link"> <i class="fa-solid fa-arrow-left"></i> Volver </a>
-
-    <div class="glass-panel detail-grid">
-        <div class="visual-side">
-            {% if caja.imagen %}
-            <img src="{{ caja.imagen.url }}" alt="{{ caja.nombre }}" class="box-image" />
-            {% else %}
-            <div class="floating-icon-large">
-                <i class="fa-solid fa-box-open"></i>
-            </div>
-            {% endif %}
-
-            <div class="glow-effect"></div>
+<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
+    <div class="glass-card rounded-3xl border-2 border-white/10 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+        <div class="bg-black/20 p-8 md:p-12 lg:p-16 flex items-center justify-center">
+            <i class="fa-solid fa-gift text-9xl md:text-[10rem] text-mystery-cyan"></i>
         </div>
 
-        <div class="info-side">
-            <div class="header-row">
-                <div class="title-group">
-                    <h1 class="box-title">{{ caja.nombre }}</h1>
+        <div class="p-6 md:p-8 lg:p-12">
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">{{ caja.nombre }}</h1>
+            <p class="text-gray-400 leading-relaxed mb-8">{{ caja.descripcion }}</p>
 
-                    {% if caja.estado == 'A' %}
-                    <span class="status-badge active"><i class="fa-solid fa-circle"></i> Activa</span>
-                    {% else %}
-                    <span class="status-badge inactive"><i class="fa-solid fa-ban"></i> Inactivo</span>
-                    {% endif %}
-                </div>
+            <div class="glass-card p-6 rounded-xl mb-8 border border-white/10">
+                <h4 class="text-mystery-cyan font-semibold mb-4 text-lg">Beneficios</h4>
+                <ul class="space-y-2 text-sm md:text-base">
+                    <li class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-mystery-pink"></i> Selección aleatoria de 3 ítems
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <i class="fa-solid fa-check text-mystery-pink"></i> Valor garantizado: ${{ caja.precio_base }} +
+                        50% extra
+                    </li>
+                </ul>
+            </div>
 
-                {% if user.is_staff %}
-                <a href="{% url 'editar_caja' caja.pk %}" class="btn-edit-small">
-                    <i class="fa-solid fa-pen-to-square"></i> Editar
+            {% if caja.es_exclusiva and user.membresia.estado != 'A' %}
+            <div class="text-center border-2 border-mystery-pink rounded-xl p-6">
+                <i class="fa-solid fa-lock text-4xl text-mystery-pink mb-3"></i>
+                <p class="mb-4">Esta caja es <strong>Exclusiva para Socios Pass</strong>.</p>
+                <a
+                    href="{% url 'suscribirse_premium' %}"
+                    class="inline-block px-8 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 mt-4"
+                >
+                    Hacerme Premium
                 </a>
-                {% endif %}
             </div>
-
-            <div class="tags-container">
-                {% for categoria in caja.allowed_categories.all %}
-                <span class="tag">{{categoria.nombre}}</span>
-                {% endfor %}
+            {% else %}
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                    <small class="text-gray-400 text-sm">Precio para ti:</small>
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-mystery-cyan mt-1">
+                        {% if user.membresia.estado == 'A' %} ${{ caja.precio_suscripcion }} {% else %} ${{
+                        caja.precio_base }} {% endif %}
+                    </h2>
+                </div>
+                <a
+                    href="{% url 'checkout' caja.id %}"
+                    class="px-8 py-4 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap"
+                >
+                    Comprar Ahora
+                </a>
             </div>
-
-            <p class="description">{{ caja.descripcion }}</p>
-
-            <div class="separator"></div>
-
-            <h3 class="subtitle">¿Qué podría contener?</h3>
-            <ul class="features-list">
-                <li><i class="fa-solid fa-check"></i> Artículos de las categorías seleccionadas</li>
-                <li><i class="fa-solid fa-check"></i> Productos sorpresa garantizados</li>
-                <li><i class="fa-solid fa-check"></i> Valor superior al precio de suscripción</li>
-            </ul>
-
-            <div class="price-action-area">
-                <div class="price-tag"><span class="currency">$</span>{{ caja.monthly_price}}</div>
-
-                {% if caja.estado == 'A' %}
-                <form action="{% url 'checkout' caja.id %}" method="POST" style="flex-grow: 1">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg btn-glow">
-                        Suscribirse Ahora <i class="fa-solid fa-rocket"></i>
-                    </button>
-                </form>
-                {% else %}
-                <button type="button" class="btn btn-disabled btn-lg" disabled>
-                    No Disponible <i class="fa-solid fa-lock"></i>
-                </button>
-                {% endif %}
-            </div>
-
-            <p class="secure-text"><i class="fa-solid fa-lock"></i> Pago procesado de forma segura con Stripe</p>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<style>
-    .detail-container {
-        padding-top: 120px;
-        padding-bottom: 50px;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-    .back-link {
-        position: absolute;
-        top: 100px;
-        left: 20px;
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .back-link:hover {
-        color: var(--highlight);
-        transform: translateX(-5px);
-    }
-
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 30px;
-        overflow: hidden;
-        width: 100%;
-        max-width: 1000px;
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-    }
-    .detail-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .visual-side {
-        background: linear-gradient(135deg, rgba(106, 0, 244, 0.1), rgba(0, 0, 0, 0));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        min-height: 400px;
-    }
-    .box-image {
-        width: 80%;
-        max-height: 80%;
-        object-fit: contain;
-        z-index: 2;
-        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
-    }
-    .floating-icon-large {
-        font-size: 8rem;
-        background: -webkit-linear-gradient(var(--highlight), var(--accent));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: float 6s infinite ease-in-out;
-        z-index: 2;
-    }
-    .glow-effect {
-        position: absolute;
-        width: 200px;
-        height: 200px;
-        background: var(--primary);
-        filter: blur(80px);
-        opacity: 0.3;
-        border-radius: 50%;
-        z-index: 1;
-    }
-
-    .info-side {
-        padding: 50px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-    .title-group {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        flex-grow: 1;
-    }
-    .box-title {
-        font-size: 2.5rem;
-        line-height: 1.1;
-        margin: 0;
-    }
-
-    /* Badges */
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.85rem;
-        padding: 4px 12px;
-        border-radius: 20px;
-        width: fit-content;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-    .status-badge.active {
-        background: rgba(0, 255, 136, 0.1);
-        color: #00ff88;
-        border: 1px solid rgba(0, 255, 136, 0.3);
-        box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
-    }
-    .status-badge.inactive {
-        background: rgba(255, 56, 96, 0.1);
-        color: #ff3860;
-        border: 1px solid rgba(255, 56, 96, 0.3);
-    }
-
-    .btn-edit-small {
-        text-decoration: none;
-        font-size: 0.9rem;
-        padding: 8px 15px;
-        border: 1px solid var(--text-muted);
-        color: var(--text-muted);
-        border-radius: 20px;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .btn-edit-small:hover {
-        border-color: var(--highlight);
-        color: var(--highlight);
-        background: rgba(0, 212, 255, 0.1);
-        box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    .tags-container {
-        margin-bottom: 20px;
-    }
-    .tag {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        margin-right: 10px;
-        color: var(--highlight);
-        border: 1px solid rgba(0, 212, 255, 0.2);
-        display: inline-block;
-        margin-bottom: 5px;
-    }
-    .description {
-        color: var(--text-muted);
-        line-height: 1.6;
-        margin-bottom: 20px;
-    }
-    .separator {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        margin: 20px 0;
-    }
-    .subtitle {
-        font-size: 1.1rem;
-        margin-bottom: 15px;
-        color: var(--text-main);
-    }
-    .features-list {
-        list-style: none;
-        margin-bottom: 30px;
-    }
-    .features-list li {
-        margin-bottom: 10px;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-    }
-    .features-list i {
-        color: var(--accent);
-        margin-right: 10px;
-    }
-
-    .price-action-area {
-        margin-top: auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-    .price-tag {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--highlight);
-    }
-    .currency {
-        font-size: 1.5rem;
-        color: var(--text-main);
-        margin-right: 5px;
-    }
-
-    .btn-lg {
-        padding: 15px 30px;
-        font-size: 1.1rem;
-        text-align: center;
-        width: 100%;
-    }
-
-    .btn-disabled {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-muted);
-        cursor: not-allowed;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: none;
-        flex-grow: 1;
-    }
-    .secure-text {
-        margin-top: 15px;
-        font-size: 0.8rem;
-        color: #555;
-        text-align: center;
-    }
-
-    @media (max-width: 768px) {
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-        .visual-side {
-            min-height: 250px;
-        }
-        .info-side {
-            padding: 30px;
-        }
-        .price-action-area {
-            flex-direction: column;
-            text-align: center;
-        }
-        .btn-lg {
-            width: 100%;
-        }
-        .header-row {
-            flex-direction: column;
-        }
-        .btn-edit-small {
-            align-self: flex-start;
-        }
-    }
-</style>
 {% endblock %}
