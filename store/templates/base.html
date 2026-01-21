@@ -116,7 +116,7 @@
           <a href="{% url 'rastrear_pedido' %}" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
             <i class="fa-solid fa-truck"></i> Rastreo
           </a>
-          {% if user.is_staff or user.is_superuser or user|has_group:"Administrador" %}
+          {% if user.is_staff or user.is_superuser or user|has_group:"Administrador" or user|has_group:"Bodeguero" or user|has_group:"Despachador" %}
           {# IMPORTANTE: pb/-mb crea un "puente" de hover para que el menú no se cierre al bajar el mouse #}
           <div class="relative group pb-6 -mb-6">
             <button type="button" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
