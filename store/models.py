@@ -59,10 +59,11 @@ class Mystery_Box(models.Model):
 class Suscripcion(models.Model): 
     usuario = models.OneToOneField(User, related_name='membresia', on_delete=models.PROTECT)
     estado = models.CharField(max_length=20, choices=(
+        ('I', 'Inactiva'),
         ('A', 'Activa'),
         ('C', 'Cancelada'),
         ('P', 'Pago_pendiente')
-    ))
+    ), default='I')
     fecha_inicio = models.DateTimeField(auto_now_add=True)
     fecha_proximo_pago = models.DateField(null=True, blank=True)
     #TODO crear fecha de inicio
@@ -72,7 +73,7 @@ class Envio(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mis_envios')
     caja = models.ForeignKey('Mystery_Box', on_delete=models.PROTECT)
     #! LOGISTICA DE ENVIO
-    fecha_envio = models.DateField(default = timezone.now) #investigar auto_now_add=True
+    fecha_envio = models.DateTimeField(default = timezone.now) #investigar auto_now_add=True
     direccion_envio = models.CharField(max_length=255, blank=True, null=True)
     ciudad = models.CharField(max_length=100, blank=True, null=True)
     pais = models.CharField(max_length=50, blank=True, null=True)
@@ -87,6 +88,7 @@ class Envio(models.Model):
         ('R', 'Recibido')
     ], default='P')
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) #TODO esto no lo debe ver el usuario
+    stripe_session_id = models.CharField(max_length=255, blank=True, null=True) # ID de sesión de Stripe para referencia
     codigo_rastreo_interno = models.CharField(max_length=50, blank=True, null=True) #ointerno
     numero_guia = models.CharField(max_length=50, blank=True, null=True)#servientrega o fedex
 

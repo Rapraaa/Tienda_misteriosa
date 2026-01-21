@@ -16,8 +16,8 @@
                         <i class="fa-solid fa-check text-mystery-pink"></i> Selección aleatoria de 3 ítems
                     </li>
                     <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-check text-mystery-pink"></i> Valor garantizado: ${{ caja.precio_base }} +
-                        50% extra
+                        <i class="fa-solid fa-check text-mystery-pink"></i> Valor potencial de hasta el 150% de tu
+                        compra.
                     </li>
                 </ul>
             </div>
@@ -38,8 +38,8 @@
                 <div>
                     <small class="text-gray-400 text-sm">Precio para ti:</small>
                     <h2 class="text-4xl md:text-5xl font-extrabold text-mystery-cyan mt-1">
-                        {% if user.membresia.estado == 'A' %} ${{ caja.precio_suscripcion }} {% else %} ${{
-                        caja.precio_base }} {% endif %}
+                        {% if user.membresia.estado == 'A' %} ${{ caja.precio_suscripcion }} {% else %}
+                        ${{caja.precio_base }} {% endif %}
                     </h2>
                 </div>
                 <a

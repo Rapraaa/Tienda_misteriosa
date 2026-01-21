@@ -7,7 +7,7 @@
             ¡Bienvenido, <span class="text-mystery-cyan">Socio VIP</span>!
         </h1>
 
-        <p class="text-lg md:text-xl text-gray-400 mb-10">
+        <p class="text-lg md:text-xl text-white/60 mb-10">
             Tu <strong class="text-white">Mysterio Pass</strong> está activo. A partir de este momento, todas las cajas tienen descuento
             automático y tienes acceso a los drops exclusivos.
         </p>
@@ -15,12 +15,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 text-left">
             <div class="glass-card p-6 rounded-xl border border-white/10">
                 <i class="fa-solid fa-calendar-check text-mystery-pink text-2xl mb-3"></i>
-                <small class="block text-gray-400 mb-2">Válido hasta:</small>
+                <small class="block text-white/60 mb-2">Válido hasta:</small>
                 <strong class="text-white text-lg">{{ user.membresia.fecha_proximo_pago|date:"d M, Y" }}</strong>
             </div>
             <div class="glass-card p-6 rounded-xl border border-white/10">
                 <i class="fa-solid fa-tags text-mystery-cyan text-2xl mb-3"></i>
-                <small class="block text-gray-400 mb-2">Tu ahorro:</small>
+                <small class="block text-white/60 mb-2">Tu ahorro:</small>
                 <strong class="text-white text-lg">Hasta 20% por caja</strong>
             </div>
         </div>

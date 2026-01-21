@@ -9,7 +9,7 @@
         </div>
         <div>
             <h2 class="text-2xl md:text-3xl font-bold mb-1">{{ user.username }}</h2>
-            <p class="text-gray-400 text-sm md:text-base">{{ user.email }}</p>
+            <p class="text-white/60 text-sm md:text-base">{{ user.email }}</p>
         </div>
     </div>
 
@@ -27,7 +27,7 @@
                 user.membresia.fecha_proximo_pago|date:"d M Y" }}
             </p>
             {% else %}
-            <p class="text-gray-400 text-sm md:text-base">No tienes una membresía activa actualmente.</p>
+            <p class="text-white/60 text-sm md:text-base">No tienes una membresía activa actualmente.</p>
             {% endif %}
         </div>
         {% if user.membresia.estado != 'A' %}
@@ -48,17 +48,17 @@
             <table class="w-full">
                 <thead>
                     <tr class="text-left border-b border-white/10">
-                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Caja</th>
-                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Fecha</th>
-                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Estado</th>
-                        <th class="text-mystery-cyan py-4 px-4 text-sm uppercase tracking-wide">Rastreo</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Caja</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Fecha</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Estado</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Rastreo</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for envio in mis_envios %}
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="py-4 px-4">{{ envio.caja.nombre }}</td>
-                        <td class="py-4 px-4 text-gray-400">{{ envio.fecha_envio|date:"d M Y" }}</td>
+                        <td class="py-4 px-4 text-white/60">{{ envio.fecha_envio|date:"d M Y" }}</td>
                         <td class="py-4 px-4">
                             <span class="bg-white/10 px-3 py-1 rounded-lg text-xs md:text-sm">
                                 {{ envio.get_estado_display }}
@@ -78,7 +78,7 @@
             </table>
         </div>
         {% else %}
-        <p class="text-center text-gray-400 py-12">
+        <p class="text-center text-white/60 py-12">
             Aún no has comprado ninguna caja.
             <a href="{% url 'home' %}" class="text-mystery-cyan hover:underline">¡Explora el catálogo!</a>
         </p>

@@ -5,34 +5,30 @@
             <h1 class="text-3xl md:text-4xl font-extrabold mb-2">
                 Logística: <span class="text-mystery-cyan">Pendientes</span>
             </h1>
-            <p class="text-gray-400">Prepara las cajas y asigna guías de transporte.</p>
+            <p class="text-white/60">Prepara las cajas y asigna guías de transporte.</p>
         </div>
         <div class="glass-card px-6 py-4 rounded-xl border-2 border-white/10 text-center">
             <span class="text-4xl font-bold text-mystery-pink block">{{ envios|length }}</span>
-            <span class="text-xs uppercase tracking-wide text-gray-400">Por Enviar</span>
+            <span class="text-xs uppercase tracking-wide text-white/60">Por Enviar</span>
         </div>
     </div>
 
-    <div class="glass-card rounded-2xl overflow-hidden border-2 border-white/10">
+    <div class="glass-strong rounded-3xl border border-white/10 shadow-glow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
-                    <tr class="border-b border-white/10">
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">ID</th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
-                            Comprador
-                        </th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">Caja</th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
-                            Tipo Cliente
-                        </th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">Acción</th>
+                    <tr class="bg-black/20">
+                        <th class="py-4 px-6 text-xs uppercase tracking-widest text-white/70">ID</th>
+                        <th class="py-4 px-6 text-xs uppercase tracking-widest text-white/70">Comprador</th>
+                        <th class="py-4 px-6 text-xs uppercase tracking-widest text-white/70">Caja</th>
+                        <th class="py-4 px-6 text-xs uppercase tracking-widest text-white/70">Tipo Cliente</th>
+                        <th class="py-4 px-6 text-xs uppercase tracking-widest text-white/70">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for envio in envios %}
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td class="py-4 px-6 font-mono text-gray-400">#{{ envio.id }}</td>
+                        <td class="py-4 px-6 font-mono text-white/60">#{{ envio.id }}</td>
                         <td class="py-4 px-6 font-semibold">
                             <i class="fa-solid fa-user-tag mr-2 text-mystery-cyan"></i>
                             {{ envio.usuario.username }}
@@ -44,7 +40,7 @@
                             {% if envio.suscripcion %}
                             <span class="bg-mystery-pink text-white px-3 py-1 rounded text-xs font-bold"> MEMBER </span>
                             {% else %}
-                            <span class="text-gray-400 text-xs">NORMAL</span>
+                            <span class="text-white/60 text-xs">NORMAL</span>
                             {% endif %}
                         </td>
                         <td class="py-4 px-6">
@@ -58,7 +54,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center py-16 text-gray-400">
+                        <td colspan="5" class="text-center py-16 text-white/60">
                             No hay envíos pendientes. ¡Buen trabajo!
                         </td>
                     </tr>

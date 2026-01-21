@@ -11,27 +11,88 @@
                 name="guia"
                 placeholder="MYS-XXXXXX"
                 value="{{ guia_buscada|default:'' }}"
-                class="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/10 text-white placeholder-gray-500 focus:border-mystery-cyan focus:outline-none focus:ring-2 focus:ring-mystery-cyan/20"
+                class="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/50 focus:border-mystery-cyan focus:outline-none focus:ring-2 focus:ring-mystery-cyan/20"
             />
             <button
                 type="submit"
-                class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap"
+                class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
             >
                 Buscar
             </button>
         </form>
 
         {% if error %}
-        <p class="text-mystery-pink mb-4">{{ error }}</p>
+        <p class="text-mystery-pink mb-4 font-semibold">{{ error }}</p>
         {% endif %} {% if envio %}
         <div class="text-left glass-card p-6 rounded-xl border border-white/10">
-            <h4 class="text-mystery-cyan font-semibold text-lg mb-2">Paquete: {{ envio.caja.nombre }}</h4>
-            <p class="mb-6">Estado: <strong class="text-white">{{ envio.get_estado_display }}</strong></p>
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h4 class="text-mystery-cyan font-bold text-xl">{{ envio.caja.nombre }}</h4>
+                    <p class="text-white/60 text-sm">ID Interno: {{ envio.codigo_rastreo_interno }}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-mystery-cyan/20 text-mystery-cyan text-xs font-bold uppercase">
+                    {{ envio.get_estado_display }}
+                </span>
+            </div>
 
-            {% if envio.numero_guia %}
-            <div class="p-4 border-2 border-dashed border-mystery-cyan/50 rounded-xl text-center">
-                <small class="block text-gray-400 mb-2">Guía Courier:</small>
-                <strong class="text-xl font-mono text-white">{{ envio.numero_guia }}</strong>
+            <div class="relative flex justify-between mb-10 mt-8">
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-white/10 -translate-y-1/2 z-0"></div>
+                <div
+                    class="absolute top-1/2 left-0 h-1 bg-mystery-cyan -translate-y-1/2 z-0 transition-all duration-500"
+                    style="width: {% if envio.estado == 'P' %}15%{% elif envio.estado == 'E' %}50%{% else %}100%{% endif %};"
+                ></div>
+
+                <div class="relative z-10 flex flex-col items-center">
+                    <div
+                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'P' or envio.estado == 'E' or envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800{% endif %}"
+                    >
+                        <i class="fa-solid fa-box-open text-xs"></i>
+                    </div>
+                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">Preparando</span>
+                </div>
+
+                <div class="relative z-10 flex flex-col items-center">
+                    <div
+                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'E' or envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800 text-white/40{% endif %}"
+                    >
+                        <i class="fa-solid fa-truck-fast text-xs"></i>
+                    </div>
+                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">En Camino</span>
+                </div>
+
+                <div class="relative z-10 flex flex-col items-center">
+                    <div
+                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800 text-white/40{% endif %}"
+                    >
+                        <i class="fa-solid fa-house-chimney text-xs"></i>
+                    </div>
+                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">Entregado</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 text-sm border-t border-white/5 pt-4">
+                <div>
+                    <p class="text-white/40 uppercase text-[10px] font-bold">Destinatario</p>
+                    <p class="text-white">{{ envio.nombre_receptor }}</p>
+                </div>
+                <div>
+                    <p class="text-white/40 uppercase text-[10px] font-bold">Destino</p>
+                    <p class="text-white">{{ envio.ciudad }}, {{ envio.pais }}</p>
+                </div>
+            </div>
+
+            {% if envio.numero_guia and not "cs_test" in envio.numero_guia %}
+            <div class="mt-6 p-4 bg-black/40 rounded-xl border border-mystery-cyan/30 text-center">
+                <small class="block text-mystery-cyan uppercase text-[10px] font-bold mb-1"
+                    >Guía del Courier Internacional</small
+                >
+                <strong class="text-lg font-mono text-white tracking-widest">{{ envio.numero_guia }}</strong>
+            </div>
+            {% else %}
+            <div class="mt-6 p-3 bg-white/5 rounded-xl text-center">
+                <p class="text-xs text-white/50 italic">
+                    Tu guía de despacho local se generará cuando el paquete salga de bodega.
+                </p>
             </div>
             {% endif %}
         </div>

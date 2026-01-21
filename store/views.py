@@ -119,8 +119,8 @@ class SuscripcionListView(LoginRequiredMixin, ListView): #todo esto ed envios gl
 
 #api 
 #*  IMPORTANTE ACA DECIRLE CUAL ES LA KEY, LA SECRETA, SIN ESTO DARA ERROR
-def crear_checkout_session(request, id, tipo): #! EStE STRIPE ES PARA COMPRAS NORMALES
-    caja = get_object_or_404(Mystery_Box, id=id,),  #vemos que caja quiere comprar
+def crear_checkout_session(request, id): #! EStE STRIPE ES PARA COMPRAS NORMALES
+    caja = get_object_or_404(Mystery_Box, id=id,)  #vemos que caja quiere comprar
     dominio = 'http://localhost:8000' #este dominio luego le damos a stripe, para que sepa a donde volver luego, es como el url base
     #! DOCUMENTACION STRIPE API https://docs.stripe.com/api/checkout/sessions/create
 
@@ -149,9 +149,9 @@ def crear_checkout_session(request, id, tipo): #! EStE STRIPE ES PARA COMPRAS NO
                     # Definimos el producto
                     'price_data': { #esto son los datos de los precios
                         'currency': 'usd', #dolares
-                        'unit_amount': int(caja.monthly_price * 100), # Stripe usa centavos (25.00 -> 2500)
+                        'unit_amount': int(precio_final * 100), # Stripe usa centavos (25.00 -> 2500)
                         'product_data': { #datos del producto
-                            'name': {'name': f"Compra de {caja.nombre}"}, #el nombre
+                            'name': f"Compra de {caja.nombre}", #el nombre
                             'description': caja.descripcion, #descripcionn
                         },
                     },
@@ -182,6 +182,18 @@ def compra_exitosa(request, id):
          #si no viene de stipe directo pal home
         return redirect('home')
     #obtenemos el objeto
+    
+    # Primero intentamos buscar si ya existe un envío con este session_id
+    envio_existente = Envio.objects.filter(stripe_session_id=session_id, usuario=request.user).first()
+    
+    if envio_existente:
+        # Si ya existe, solo mostramos la info sin crear nada nuevo
+        return render(request, "store/templates/pago_exitoso.html", {
+            'caja': envio_existente.caja,
+            'envio': envio_existente
+        })
+
+    # 2. PROCESO DE COMPRA REAL (solo si no existe)
     caja = get_object_or_404(Mystery_Box, id=id)
     
     #! PEDIMOS LAS DIRECCIONES QUE PUSO EL SAPO DEL USUARIO
@@ -197,39 +209,25 @@ def compra_exitosa(request, id):
         return render(request, 'store/templates/error_pago.html', {'error': f"Error de Stripe: {str(e)}"}) #mandamos a la pagina de error
     #! LÓGICA DE NEGOCIO: CREAR SUSCRIPCIÓN Y PRIMER ENVÍO
     #?Usamos get_or_create para que si recarga la página no se cobre doble
-    suscripcion, created = Suscripcion.objects.get_or_create( #si hay suscripcion pq recargo pagina no pasa nada, 
-        #sino la crea, esto pq tuvimos un fallo que si recargabamos se repetia la suscripcion 
-        usuario=request.user, 
+
+    suscripcion, _ = Suscripcion.objects.get_or_create(usuario=request.user)
+    nuevo_envio = Envio.objects.create(
+        usuario=request.user,
         caja=caja,
-        estado='A', #activo
-        defaults={'fecha_proximo_pago': timezone.now() + timedelta(days=30), #1 mes pal proximo pago\
-        }
+        stripe_session_id=session_id,  # Guardamos el session_id de Stripe
+        nombre_receptor=datos_envio.get('name') or request.user.username,
+        direccion_envio=f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
+        ciudad=info_direccion.get('city', ''),
+        pais=info_direccion.get('country', ''),
+        codigo_postal=info_direccion.get('postal_code', ''),
+        # AQUÍ: Tu código bonito que tanto querías
+        codigo_rastreo_interno=generar_id_interno(),
+        # El número de guía queda VACÍO para el despachador
+        numero_guia=None, 
+        estado='P'
+    ) 
+    generar_caja(nuevo_envio)
 
-    )
-
-    if created: #si es que es nueva la suscripcion, osea no se actualizo la pagina
-        #generamos el primer envio
-        codigo = generar_id_interno() #el codigo
-        nuevo_envio = Envio.objects.create(
-            suscripcion=suscripcion,
-            estado='P',
-            nombre_receptor = nombre_cliente,
-            
-            # Usamos 'info_direccion' que preparamos arriba
-            direccion_envio = f"{info_direccion.get('line1', '')} {info_direccion.get('line2', '')}".strip(),
-            ciudad = info_direccion.get('city', ''),
-            pais = info_direccion.get('country', ''),
-            codigo_postal = info_direccion.get('postal_code', ''),
-            codigo_rastreo_interno = codigo
-   
-        )
-        generar_caja(nuevo_envio)
-        #TODO aca toca llamar al algoritmo que aun no ahcemos en modelos de los productos random
-    else:
-        # Si recargó la página, buscamos el ulitmo envio de suscripcoon
-        nuevo_envio = Envio.objects.filter(suscripcion=suscripcion).last()
-
-    # CAMBIO IMPORTANTE: Pasamos 'envio' al contexto, no solo 'caja'
     return render(request, "store/templates/pago_exitoso.html", {
             'caja': caja,
             'envio': nuevo_envio 
@@ -264,17 +262,23 @@ class EnviosUpdateView(UpdateView):
     model = Envio
     form_class = EnvioDespachoForm
     template_name = 'store/templates/EnviosUpdateView.html'
-    success_url = reverse_lazy('envios') # Redirige a la lista al terminar
+    success_url = reverse_lazy('envios')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        envio = self.object
+        envio = self.object  
+        comprador = envio.usuario # el cliente que hizo la compra
         
-        #enviamos los productosque hay que empacar
+
         context['items_a_empacar'] = envio.productos.all()
         
-        #calcula el margen de ganancia o perdida
-        precio_pagado = envio.caja.monthly_price
+
+        if hasattr(comprador, 'membresia') and comprador.membresia.estado == 'A':
+            precio_pagado = envio.caja.precio_suscripcion
+        else:
+            precio_pagado = envio.caja.precio_base
+            
+
         costo_real = envio.valor_total
         margen = precio_pagado - costo_real
         
@@ -324,7 +328,7 @@ def rastrear_pedido(request):
     if guia:
         try:
             # Buscamos el envío por número de guía
-            envio = Envio.objects.select_related('suscripcion__caja').get(codigo_rastreo_interno=guia)
+            envio = Envio.objects.select_related('usuario', 'caja').get(codigo_rastreo_interno=guia)
         except Envio.DoesNotExist:
             error = "No encontramos ningún pedido con ese número de guía. Revisa que esté bien escrito."
 
