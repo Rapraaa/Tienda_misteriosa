@@ -9,7 +9,7 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
     caja = Envio_obj.caja
 
     # 2. Vemos si el usuario es premium para definir el presupuesto de la caja
-    es_premium = es_usuario_premium(Envio_obj.usuario)
+    #es_premium = es_usuario_premium(Envio_obj.usuario)
 
     #precio_pagado = caja.precio_suscripcion if es_premium else caja.precio_base  no seria jsuto, cancelado
 
