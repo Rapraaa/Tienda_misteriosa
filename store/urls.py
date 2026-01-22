@@ -22,6 +22,7 @@ urlpatterns = [
     path('compra-exitosa/<int:id>/', compra_exitosa, name='compra_exitosa'),
     path('envios/', EnviosListView.as_view(), name='envios'),
     path('despachar/<int:pk>/', EnviosUpdateView.as_view(), name='despachar_envio'),
+    path('envios/<int:pk>/recibido/', confirmar_recepcion, name='confirmar_recepcion'),
     path('rastreo/', rastrear_pedido, name='rastrear_pedido'),
     path('perfil/', perfil, name='perfil'),
     path('suscribirse/premium/', crear_suscripcion_premium, name='suscribirse_premium'),
@@ -44,6 +45,9 @@ urlpatterns = [
     path('cupones/<int:pk>/', CuponDetailView.as_view(), name='cupon_detalle'),
     path('cupones/<int:pk>/editar/', CuponUpdateView.as_view(), name='cupon_editar'),
     path('cupones/<int:pk>/eliminar/', CuponDeleteView.as_view(), name='cupon_eliminar'),
+    
+    # Configuración Global
+    path('configuracion/editar/', editar_configuracion, name='editar_configuracion'),
     
     # Logs de Auditoría
     path('sistema/logs/', AuditLogView.as_view(), name='audit_log'),

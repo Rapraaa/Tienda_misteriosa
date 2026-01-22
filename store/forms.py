@@ -11,14 +11,15 @@ class ProductoForm(forms.ModelForm): #aca definimos un form
 
     class Meta:#debemos meter en meta
         model = Producto #como si fuera un mixin normal
-        fields = ['nombre', 'valor', 'stock', 'categoria']
+        fields = ['nombre', 'valor', 'stock', 'categoria', 'activo']
         
         # AQUÍ OCURRE LA MAGIA
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'cyber-input', 'placeholder': 'Ej: Caja Misteriosa Anime'}), #texto
             'stock': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0'}),
             'valor': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0'}),#numeros
-            'categoria': forms.CheckboxSelectMultiple(), # <--- Esto convierte el select en checkboxes
+            'categoria': forms.CheckboxSelectMultiple(), 
+            'activo': forms.CheckboxInput(attrs={'class': 'cyber-checkbox'}),
             #ya que por defecto el selector es con control y es incomodo, esto es emjor, hay radiobutton tambien y muchos mas
             #https://docs.djangoproject.com/en/6.0/ref/forms/widgets/ aca
 
@@ -207,3 +208,14 @@ class CuponForm(forms.ModelForm):
             "usos_maximos": "Usos Máximos", "solo_premium": "Solo Premium", "monto_minimo": "Monto Mínimo"
         }
 
+
+class ConfiguracionForm(forms.ModelForm):
+    class Meta:
+        model = Configuracion
+        fields = ['tasa_iva']
+        widgets = {
+            'tasa_iva': forms.NumberInput(attrs={'class': 'cyber-input', 'min': '0', 'max': '100', 'step': '0.01'}),
+        }
+        labels = {
+            'tasa_iva': 'Tasa de IVA global (%)',
+        }

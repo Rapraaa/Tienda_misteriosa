@@ -1,10 +1,11 @@
 import random #! para las cajas
-from .models import *
+# from .models import *  -- Removed to avoid circular import
 from decimal import Decimal #para la multiplicacion, para que no tenga asi de que 1.000000001
 import string #! estos son para generar el  codigo de rastreo random
 import random 
 
 def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
+    from .models import Producto  # Import locally to avoid circular dependency
 
     caja = Envio_obj.caja
 
@@ -16,13 +17,13 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
     #presupuesto maximo
     valor_maximo = caja.precio_base * Decimal('1.5')
 
-    productos_posibles = list(Producto.objects.filter(categoria__in=caja.allowed_categories.all()))#genera una lista de los productos posibles
+    productos_posibles = list(Producto.objects.filter(categoria__in=caja.allowed_categories.all(), activo=True))#genera una lista de los productos posibles
 
 
 
     if not productos_posibles: #SI NO HAY PRODUCTOS DE ESA CATEGORIA USAMOS DE CUALQUIERA COMO PLAN B
         #TODO que de un error en lugar de
-        productos_posibles = list(Producto.objects.all())
+        productos_posibles = list(Producto.objects.filter(activo=True))
 
     #ahora como tenemos la lista de productos de esa lista vamos a seleccionar aletoriamentem uejejejej 
     productos_seleccionados = [] #definimos la lista sino python se nos desconoce
@@ -43,7 +44,7 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
         #sacamos una lista de los objetos,pero excluimos los que tengan las siguientes id, que son las de productos uqe ya se eligieron, para no repeti
         #? doble guion bajo es la condicion o puente __
         ids_usados = [p.id for p in productos_seleccionados]
-        items_reserva = list(Producto.objects.exclude(id__in=ids_usados)) #esto es como lo del codewars, es el mismo cidigo que podrias hacer hacia abajo pero comprimido
+        items_reserva = list(Producto.objects.filter(activo=True).exclude(id__in=ids_usados)) #esto es como lo del codewars, es el mismo cidigo que podrias hacer hacia abajo pero comprimido
             
         #el min compara 2 numeros para ver el mas pequenio. elige el mas peque;o, los que faltan, o los que tenemos si es que tenemos menos de los que faltan
         #que digamos oslo hay 2, el mas peque;o es 2 y pide 2, asi o se rompe el sa,ple, eso pq nos estaba dando un error el sample estupidito maldito python lo odio es lo mejor que existe gravias python por todo eres el mejor lenguaje del mundo python ojala nunca te remplazen si algun dia te vuelves obsoleto te seguire usando python, si me pudiera me casaria contigo ijueputa caca
@@ -68,6 +69,7 @@ def generar_caja(Envio_obj): #recibe un objeto de envio, vacio y lo llena
         #todo cantidad de productos dinamica
 
 def generar_id_interno():
+    from .models import Envio  # Import locally to avoid circular dependency
     # Genera un código tipo MYS-A1B2C3
     while True:
         caracteres = string.ascii_uppercase + string.digits
@@ -88,6 +90,7 @@ def generar_id_interno():
 #! ---------------------##################################################################################################
 
 def es_usuario_premium(user):
+    from .models import Suscripcion  # Import locally to avoid circular dependency
     if not user.is_authenticated:
         return False
     # Buscamos si tiene una suscripción activa

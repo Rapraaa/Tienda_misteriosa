@@ -13,35 +13,46 @@
             <div class="lg:col-span-2 glass-card p-6 md:p-8 rounded-2xl border-2 border-white/10">
                 <!-- Contenido de las Cajas -->
                 <div>
-                   <h3 class="font-bold text-white mb-4"><i class="fa-solid fa-boxes-stacked text-mystery-cyan mr-2"></i>Contenido del Pedido</h3>
-                   
-                   <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                       {% for hermano in envios_hermanos %}
-                       <div class="glass-strong p-4 rounded-xl border border-white/5">
-                           <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                               <h4 class="font-bold text-mystery-purple">{{ hermano.caja.nombre }}</h4>
-                               <span class="text-xs text-white/40">ID: {{ hermano.id }}</span>
-                           </div>
-                           
-                           <div class="space-y-2">
-                               {% for producto in hermano.productos.all %}
-                               <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer group transition-all">
-                                   <div class="relative flex items-center">
-                                       <input type="checkbox" class="peer appearance-none w-5 h-5 rounded-md border border-white/20 checked:bg-mystery-success checked:border-mystery-success transition-all bg-black/20">
-                                       <i class="fa-solid fa-check text-black text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-all"></i>
-                                   </div>
-                                   <div class="flex-1 flex justify-between text-sm">
-                                       <span class="text-white/80 group-hover:text-white transition-colors">{{ producto.nombre }}</span>
-                                       <span class="font-mono text-mystery-gold text-xs">${{ producto.valor }}</span>
-                                   </div>
-                               </label>
-                               {% empty %}
-                               <p class="text-white/40 text-xs italic p-2">Caja vacía (Error: verificar generación)</p>
-                               {% endfor %}
-                           </div>
-                       </div>
-                       {% endfor %}
-                   </div>
+                    <h3 class="font-bold text-white mb-4">
+                        <i class="fa-solid fa-boxes-stacked text-mystery-cyan mr-2"></i>Contenido del Pedido
+                    </h3>
+
+                    <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {% for hermano in envios_hermanos %}
+                        <div class="glass-strong p-4 rounded-xl border border-white/5">
+                            <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                                <h4 class="font-bold text-mystery-purple">{{ hermano.caja.nombre }}</h4>
+                                <span class="text-xs text-white/40">ID: {{ hermano.id }}</span>
+                            </div>
+
+                            <div class="space-y-2">
+                                {% for producto in hermano.productos.all %}
+                                <label
+                                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer group transition-all"
+                                >
+                                    <div class="relative flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            class="peer appearance-none w-5 h-5 rounded-md border border-white/20 checked:bg-mystery-success checked:border-mystery-success transition-all bg-black/20"
+                                        />
+                                        <i
+                                            class="fa-solid fa-check text-black text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-all"
+                                        ></i>
+                                    </div>
+                                    <div class="flex-1 flex justify-between text-sm">
+                                        <span class="text-white/80 group-hover:text-white transition-colors"
+                                            >{{ producto.nombre }}</span
+                                        >
+                                        <span class="font-mono text-mystery-gold text-xs">${{ producto.valor }}</span>
+                                    </div>
+                                </label>
+                                {% empty %}
+                                <p class="text-white/40 text-xs italic p-2">Caja vacía (Error: verificar generación)</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
 
                 <div class="mt-8 p-6 bg-black/30 rounded-xl border border-white/10">
@@ -65,7 +76,7 @@
                 <h3 class="text-xl font-semibold mb-6">Finalizar Despacho</h3>
                 <div class="mb-6">
                     <label class="block text-mystery-cyan font-semibold mb-2 text-sm">
-                        Código Courier (Servientrega/FedEx)
+                        Código Courier (Servientrega)
                     </label>
                     {{ form.numero_guia|add_class:"cyber-input" }}
                 </div>

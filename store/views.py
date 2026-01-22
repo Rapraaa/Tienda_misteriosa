@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from decimal import Decimal
 from .models import Mystery_Box
 from django.contrib.auth.decorators import login_required, permission_required
 from .models import *
@@ -7,7 +8,7 @@ from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.urls import reverse_lazy
-from .forms import ProductoForm, CajaForm, EnvioDespachoForm, CuponForm
+from .forms import ProductoForm, CajaForm, EnvioDespachoForm, CuponForm, ConfiguracionForm
 import stripe #! para la api de stripe
 from django.conf import settings #! para las llaves del stripe
 from django.shortcuts import redirect #para redigirir a la api
@@ -28,6 +29,24 @@ def home(request):
 def box(request, id): #COMO LAS CAJAS RECIBEN UN ID PARA VER QUE HACER CON EL HTML PONEMOS ACA EL ID
     box = get_object_or_404(Mystery_Box, id=id)
     return render(request, "store/templates/detalle_caja.html", {'caja' : box})
+
+@login_required
+@permission_required('store.change_configuracion', raise_exception=True)
+def editar_configuracion(request):
+    configID = 1
+    config, created = Configuracion.objects.get_or_create(id=configID)
+    
+    if request.method == 'POST':
+        form = ConfiguracionForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configuración de IVA actualizada correctamente.')
+            return redirect('editar_configuracion')
+    else:
+        form = ConfiguracionForm(instance=config)
+    
+    return render(request, 'store/templates/configuracion_form.html', {'form': form})
+
     
 class CajaCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView): 
     model = Mystery_Box
@@ -149,7 +168,7 @@ def crear_checkout_session(request, id): #! EStE STRIPE ES PARA COMPRAS NORMALES
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'], #tipo de pago, hay mas como cripto por ejemplo
             #! VAmos a pedir la direccion de envio tambien
-            shipping_address_collection={'allowed_countries':['EC', 'US'],
+            shipping_address_collection={'allowed_countries':['EC'],
                                          },
             line_items=[ #el carrito de compras
                 {
@@ -250,7 +269,23 @@ def compra_exitosa(request, id):
 #todo las funciones para calcular las coas en models
 #todo algoritmo de suerte
 #todo crear una pagina para simular el rastreo del pedido (fake tracker)
-#TODO PORDER CREAR CATEGORIAS DESDE LA PARTE DE CREAR PRODUCTO
+@login_required
+def confirmar_recepcion(request, pk):
+    """Permite al usuario confirmar que recibió su pedido"""
+    envio = get_object_or_404(Envio, pk=pk)
+    
+    # Seguridad: Solo el dueño puede confirmar
+    if envio.usuario != request.user:
+        messages.error(request, "No tienes permiso para confirmar este envío.")
+        return redirect('perfil')
+        
+    # Lógica: Solo si está enviado se puede recibir
+    if envio.estado == 'E':
+        envio.estado = 'R'
+        envio.save()
+        messages.success(request, f"¡Gracias! Has confirmado la recepción del pedido {envio.codigo_rastreo_interno}.")
+    
+    return redirect('perfil')
 
 #todo api para los productos
 
@@ -263,7 +298,8 @@ class EnviosListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         # CAMBIO por la logica: Ahora select_related usa los campos directos usuario'y 'cajita
-        return Envio.objects.filter(estado='P').select_related('usuario', 'caja').order_by('fecha_envio', 'codigo_rastreo_interno')
+        # Mostramos pendientes (P) y enviados (E) para que puedan marcarlos como recibidos si el usuario no lo hace
+        return Envio.objects.filter(estado__in=['P', 'E']).select_related('usuario', 'caja').order_by('fecha_envio', 'codigo_rastreo_interno')
     
 
 class EnviosUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -310,7 +346,8 @@ class EnviosUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         envio = form.instance
         
         # Validar si estamos enviando (si cambia a Enviado)
-        if envio.estado == 'E' and not envio.numero_guia:
+        # Si ya estaba enviado ('E') y lo cambiamos a recibido ('R'), no pedimos guia de nuevo obligatoriamente si ya la tiene
+        if envio.estado == 'E' and not envio.numero_guia and 'estado' in form.changed_data:
              form.add_error('numero_guia', 'Debes ingresar una guía para marcar como Enviado')
              return self.form_invalid(form)
 
@@ -391,8 +428,14 @@ def perfil(request):
         usuario=request.user
     ).select_related('caja').order_by('-fecha_envio', 'codigo_rastreo_interno')
     
+    try:
+        suscripcion = request.user.membresia
+    except:
+        suscripcion = None
+        
     return render(request, 'store/templates/profile.html', {
-        'mis_envios': mis_envios
+        'mis_envios': mis_envios,
+        'suscripcion': suscripcion
     })
 #todo si se llama domenica puede usar el cupon de kamasutra
 
@@ -495,25 +538,50 @@ def agregar_al_carrito(request, id):
 
 def ver_carrito(request):
     """Muestra la página del carrito con cupones"""
-    from decimal import Decimal
+    from decimal import Decimal, ROUND_HALF_UP
+    
+    # Configurar redondeo a 2 decimales
+    cents = Decimal('0.01')
+    
     cart = Cart(request)
     items = cart.get_items()
-    total = cart.get_total()
     
-    # Obtener cupón de la sesión
+    # 1. Obtener Subtotal Base (Suma de precios de items)
+    subtotal = cart.get_subtotal().quantize(cents, rounding=ROUND_HALF_UP)
+    
+    # 2. Obtener cupón de la sesión
     cupon_codigo = request.session.get('cupon_codigo')
-    cupon_descuento = Decimal(str(request.session.get('cupon_descuento', 0)))
+    cupon_descuento = Decimal(str(request.session.get('cupon_descuento', 0))).quantize(cents, rounding=ROUND_HALF_UP)
     
-    # Calcular total final
-    total_final = total - cupon_descuento if cupon_descuento > 0 else total
+    # 3. Calcular Nuevo Subtotal (Base Imponible)
+    # El descuento se aplica ANTES del IVA
+    subtotal_con_descuento = subtotal - cupon_descuento
+    if subtotal_con_descuento  < 0:
+        subtotal_con_descuento  = Decimal('0.00')
+        
+    # 4. Calcular IVA sobre el nuevo subtotal
+    from .models import Configuracion
+    tasa_iva = Configuracion.get_iva()
     
+    iva_calculado = (subtotal_con_descuento * (tasa_iva / Decimal(100))).quantize(cents, rounding=ROUND_HALF_UP)
+    
+    # 5. Total Final
+    total_final = (subtotal_con_descuento + iva_calculado).quantize(cents, rounding=ROUND_HALF_UP)
+    
+    # Valores originales para referencia (sin descuento)
+    iva_original = cart.get_iva_amount()
+    total_original = cart.get_total()
+
     return render(request, 'store/templates/carrito.html', {
         'items': items,
-        'total': total,
+        'subtotal': subtotal,
+        'iva': iva_calculado, # Ahora mostramos el IVA ajustado
+        'tasa_iva': tasa_iva,
         'cart_count': cart.get_count(),
         'cupon_codigo': cupon_codigo,
         'cupon_descuento': cupon_descuento,
-        'total_final': total_final
+        'total_final': total_final,
+        'total': total_original # Para mostrar precio tachado si es necesario
     })
 
 
@@ -561,13 +629,18 @@ def checkout_carrito(request):
             precio_final = caja.precio_suscripcion
         else:
             precio_final = caja.precio_base
+            
+        # Calcular precio con IVA para Stripe
+        from .models import Configuracion
+        tasa_iva = Configuracion.get_iva()
+        precio_con_iva = precio_final * (1 + (tasa_iva / Decimal(100)))
         
         line_items.append({
             'price_data': {
                 'currency': 'usd',
-                'unit_amount': int(precio_final * 100),  # Stripe usa centavos
+                'unit_amount': int(precio_con_iva * 100),  # Stripe usa centavos
                 'product_data': {
-                    'name': f"{caja.nombre}",
+                    'name': f"{caja.nombre} (Inc. IVA)",
                     'description': caja.descripcion or "Caja misteriosa",
                 },
             },
@@ -581,12 +654,24 @@ def checkout_carrito(request):
     
     if cupon_descuento > 0 and cupon_codigo:
         try:
+            # AJUSTE PARA STRIPE:
+            # Como aplicamos descuento al Subtotal, pero enviamos LineItems con IVA incluido,
+            # necesitamos "inflar" el cupón en Stripe para que reste la cantidad correcta del total bruto.
+            # Descuento_Stripe = Descuento_Base * (1 + IVA)
+            
+            descuento_base = Decimal(str(cupon_descuento))
+            from .models import Configuracion
+            tasa_iva = Configuracion.get_iva()
+            factor_iva = 1 + (tasa_iva / Decimal(100))
+            
+            descuento_ajustado = descuento_base * factor_iva
+            
             # Crear cupón en Stripe al vuelo
             cupon_stripe = stripe.Coupon.create(
-                amount_off=int(float(cupon_descuento) * 100),
+                amount_off=int(descuento_ajustado * 100), # Centavos
                 currency='usd',
                 duration='once',
-                name=f"Cupón {cupon_codigo}"
+                name=f"Cupón {cupon_codigo} (Base ${descuento_base})"
             )
             discounts = [{'coupon': cupon_stripe.id}]
         except Exception as e:
@@ -597,10 +682,10 @@ def checkout_carrito(request):
         # Crear sesión de checkout en Stripe
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
-            shipping_address_collection={'allowed_countries': ['EC', 'US']},
+            shipping_address_collection={'allowed_countries': ['EC']},
             line_items=line_items,
             mode='payment',
-            discounts=discounts,  # Aplicar descuento
+            discounts=discounts,  # Aplicar descuento ajustado
             success_url=f'{dominio}/carrito/compra-exitosa/?session_id={{CHECKOUT_SESSION_ID}}',
             cancel_url=f'{dominio}/carrito/',
         )
@@ -681,6 +766,20 @@ def compra_exitosa_carrito(request):
                 numero_guia=None,
                 estado='P'
             )
+
+            # Guardar datos de IVA (Snapshot)
+            from .models import Configuracion
+            tasa_iva = Configuracion.get_iva()
+            
+            # Calcular precios para este item específico
+            precio_unitario = caja_obj.precio_suscripcion if es_usuario_premium(request.user) else caja_obj.precio_base
+            iva_item = precio_unitario * (tasa_iva / Decimal(100))
+            
+            nuevo_envio.subtotal = precio_unitario
+            nuevo_envio.iva_porcentaje = tasa_iva
+            nuevo_envio.monto_impuesto = iva_item
+            nuevo_envio.valor_total = precio_unitario + iva_item
+            nuevo_envio.save()
             
             # Llenar la caja con productos aleatorios
             try:
@@ -719,10 +818,16 @@ def compra_exitosa_carrito(request):
     if 'cupon_descuento' in request.session:
         del request.session['cupon_descuento']
     
+    # Calcular totales para mostrar
+    total_pagado = sum(e.valor_total for e in envios_creados)
+    total_impuesto = sum(e.monto_impuesto for e in envios_creados)
+
     return render(request, "store/templates/pago_exitoso_carrito.html", {
         'envios': envios_creados,
         'total_cajas': len(envios_creados),
-        'codigo_rastreo': codigo_unico_carrito
+        'codigo_rastreo': codigo_unico_carrito,
+        'total_pagado': total_pagado,
+        'total_impuesto': total_impuesto
     })
 
 
@@ -743,13 +848,19 @@ def validar_cupon(request):
         except Cupon.DoesNotExist:
             messages.error(request, f'El cupón "{codigo_cupon}" no es válido')
             return redirect('ver_carrito')
+            
         cart = Cart(request)
-        total = cart.get_total()
-        es_valido, mensaje = cupon.es_valido(request.user if request.user.is_authenticated else None, total)
+        # CAMBIO: Usamos Subtotal para calcular descuentos, no el Total con IVA
+        subtotal = cart.get_subtotal()
+        
+        es_valido, mensaje = cupon.es_valido(request.user if request.user.is_authenticated else None, subtotal)
+        
         if not es_valido:
             messages.error(request, mensaje)
             return redirect('ver_carrito')
-        descuento = cupon.calcular_descuento(total)
+            
+        descuento = cupon.calcular_descuento(subtotal)
+        
         request.session['cupon_codigo'] = codigo_cupon
         request.session['cupon_descuento'] = float(descuento)
         messages.success(request, f'✅ Cupón {codigo_cupon} aplicado: ${descuento} de descuento')

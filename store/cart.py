@@ -2,11 +2,10 @@ from decimal import Decimal
 from .models import Mystery_Box, CarritoItem
 
 class Cart:
-    """
-    Clase para manejar el carrito de compras.
-    - Para usuarios anónimos: usa session
-    - Para usuarios autenticados: usa el modelo CarritoItem
-    """
+
+#    Clase para manejar el carrito de compras.
+    #! Para usuarios anónimos: usa session
+    #!Para usuarios autenticados: usa el modelo CarritoItem
     
     def __init__(self, request):
         self.request = request
@@ -114,16 +113,39 @@ class Cart:
         return items
     
     def get_total(self):
-        """Retorna el total del carrito"""
+        """Retorna el total del carrito (Subtotal + IVA)"""
+        subtotal = self.get_subtotal()
+        from .models import Configuracion
+        tasa_iva = Configuracion.get_iva()
+        
+        impuesto = subtotal * (tasa_iva / Decimal(100))
+        total = subtotal + impuesto
+        return total.quantize(Decimal('0.01'))
+
+    def get_subtotal(self):
+        """Retorna el subtotal (suma de precios base sin impuestos)"""
         items = self.get_items()
         return sum(item['subtotal'] for item in items)
     
+    def get_iva_amount(self):
+        """Retorna el monto total de IVA calculada"""
+        subtotal = self.get_subtotal()
+        from .models import Configuracion
+        tasa_iva = Configuracion.get_iva()
+        return (subtotal * (tasa_iva / Decimal(100))).quantize(Decimal('0.01'))
+    
+    def get_iva_percentage(self):
+        """Retorna el porcentaje de IVA actual"""
+        from .models import Configuracion
+        return Configuracion.get_iva()
+    
     def get_count(self):
-        """Retorna el número total de items en el carrito"""
+        """Retorna el número total de items en el carrito (suma de cantidades)"""
         if self.request.user.is_authenticated:
-            return CarritoItem.objects.filter(usuario=self.request.user).count()
+            from django.db.models import Sum
+            return CarritoItem.objects.filter(usuario=self.request.user).aggregate(total=Sum('cantidad'))['total'] or 0
         else:
-            return len(self.cart)
+            return sum(self.cart.values())
     
     def merge_to_user(self, user):
         """

@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from decimal import Decimal
 from simple_history.models import HistoricalRecords
+from .utils import es_usuario_premium
 
 # Create your models here.
 class Producto(models.Model):#TODO Explicar para que es el models.Model
@@ -13,6 +14,7 @@ class Producto(models.Model):#TODO Explicar para que es el models.Model
     #productos, es decir los hijos
     valor = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     stock = models.PositiveIntegerField(default=1)#no acepta negativos
+    activo = models.BooleanField(default=True, help_text="Si se desactiva, no se usará en nuevas cajas.")
     
     def __str__(self):
         return self.nombre
@@ -88,29 +90,49 @@ class Envio(models.Model):
         ('E', 'Enviado'),
         ('R', 'Recibido')
     ], default='P')
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) #TODO esto no lo debe ver el usuario
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0) # Precio base - descuentos
+    iva_porcentaje = models.DecimalField(max_digits=5, decimal_places=2, default=0) # El IVA que se aplicó (snapshot)
+    monto_impuesto = models.DecimalField(max_digits=10, decimal_places=2, default=0) # El dinero cobrado de IVA
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0) # Subtotal + Impuestos
     stripe_session_id = models.CharField(max_length=255, blank=True, null=True) # ID de sesión de Stripe para referencia
     codigo_rastreo_interno = models.CharField(max_length=50, blank=True, null=True) #ointerno
     numero_guia = models.CharField(max_length=50, blank=True, null=True)#servientrega o fedex
 
+class Configuracion(models.Model):
+    """Modelo para configuraciones globales de la tienda"""
+    tasa_iva = models.DecimalField(max_digits=5, decimal_places=2, default=15.00, help_text="Porcentaje de IVA actual (ej. 15.00)")
+    
+    def __str__(self):
+        return f"Configuración (IVA: {self.tasa_iva}%)"
 
-class CarritoItem(models.Model):
-    """Modelo para almacenar items del carrito de usuarios autenticados"""
+    def save(self, *args, **kwargs):
+        # Asegurar que solo exista 1 configuración
+        if not self.pk and Configuracion.objects.exists():
+            return
+        return super(Configuracion, self).save(*args, **kwargs)
+
+    @classmethod
+    def get_iva(cls):
+        """Retorna el porcentaje de IVA actual"""
+        config, created = cls.objects.get_or_create(id=1)
+        return config.tasa_iva
+
+
+class CarritoItem(models.Model): #! modelo para los items del carrito de compra
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carrito_items')
     caja = models.ForeignKey('Mystery_Box', on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
-    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    fecha_agregado = models.DateTimeField(auto_now_add=True) #fecha en la que se agrego al carrito
     
     class Meta:
-        unique_together = ('usuario', 'caja')  # Un usuario no puede tener la misma caja duplicada en el carrito
+        unique_together = ('usuario', 'caja')  # Un usuario no puede tener la misma caja duplicada en el carrito, se sumara luego
     
     def __str__(self):
         return f"{self.usuario.username} - {self.caja.nombre} x{self.cantidad}"
     
     @property
     def subtotal(self):
-        """Calcula el subtotal considerando si el usuario es premium"""
-        from .utils import es_usuario_premium
+        #? calculo del subtotal, verificano si el usuario es premium
         es_premium = es_usuario_premium(self.usuario)
         precio = self.caja.precio_suscripcion if es_premium else self.caja.precio_base
         return precio * self.cantidad
@@ -133,7 +155,7 @@ class Cupon(models.Model):
         return f"{self.codigo} - {self.descuento_porcentaje}% / ${self.descuento_fijo}"
     
     def es_valido(self, usuario=None, monto_compra=0):
-        """Valida si el cupón puede ser usado"""
+        #? validacion
         from django.utils import timezone
         from .utils import es_usuario_premium
         
@@ -147,7 +169,7 @@ class Cupon(models.Model):
         if ahora < self.fecha_inicio:
             return False, "Este cupón aún no es válido"
         if ahora > self.fecha_expiracion:
-            return False, "Este cupón ha expirado"
+            return False, f"Este cupón expiró el {self.fecha_expiracion.strftime('%d/%m/%Y a las %H:%M')}"
         
         # Verificar usos
         if self.usos_maximos and self.usos_actuales >= self.usos_maximos:

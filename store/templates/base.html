@@ -2,239 +2,315 @@
 {% load auth_extras %}
 <!doctype html>
 <html lang="es" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}Mysterio | Dark Mystery Shop{% endblock %}</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Mysterio | Dark Mystery Shop{% endblock %}</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "mystery-black": "#05040A",
-              "mystery-ink": "#0B0714",
-              "mystery-deep": "#0F0C29",
-              "mystery-gold": "#FFD700",
-              "mystery-gold-dark": "#FF8C00",
-              "mystery-purple": "#6A00F4",
-              "mystery-purple-electric": "#A855F7",
-              "mystery-pink": "#F20089",
-              "mystery-cyan": "#00D4FF",
-              "mystery-success": "#00FF88",
-              "mystery-danger": "#FF4D6D",
-            },
-            backgroundImage: {
-              "mystery-sky": "radial-gradient(1200px 500px at 20% 0%, rgba(106,0,244,0.25), transparent 60%), radial-gradient(900px 450px at 80% 10%, rgba(242,0,137,0.18), transparent 55%), radial-gradient(700px 400px at 50% 85%, rgba(0,212,255,0.12), transparent 55%), linear-gradient(to right, #24243e, #302b63, #0f0c29)",
-              "mystery-gold-gradient": "linear-gradient(45deg, #FFD700, #FF8C00)",
-              "mystery-purple-gradient": "linear-gradient(45deg, #6A00F4, #F20089)",
-            },
-            boxShadow: {
-              glow: "0 0 0 1px rgba(255,255,255,0.08), 0 10px 40px rgba(0,0,0,0.55)",
-              "glow-pink": "0 0 0 1px rgba(242,0,137,0.25), 0 18px 60px rgba(242,0,137,0.12)",
-              "glow-cyan": "0 0 0 1px rgba(0,212,255,0.22), 0 18px 60px rgba(0,212,255,0.10)",
-            },
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "mystery-black": "#05040A",
+            "mystery-ink": "#0B0714",
+            "mystery-deep": "#0F0C29",
+            "mystery-gold": "#FFD700",
+            "mystery-gold-dark": "#FF8C00",
+            "mystery-purple": "#6A00F4",
+            "mystery-purple-electric": "#A855F7",
+            "mystery-pink": "#F20089",
+            "mystery-cyan": "#00D4FF",
+            "mystery-success": "#00FF88",
+            "mystery-danger": "#FF4D6D",
+          },
+          backgroundImage: {
+            "mystery-sky": "radial-gradient(1200px 500px at 20% 0%, rgba(106,0,244,0.25), transparent 60%), radial-gradient(900px 450px at 80% 10%, rgba(242,0,137,0.18), transparent 55%), radial-gradient(700px 400px at 50% 85%, rgba(0,212,255,0.12), transparent 55%), linear-gradient(to right, #24243e, #302b63, #0f0c29)",
+            "mystery-gold-gradient": "linear-gradient(45deg, #FFD700, #FF8C00)",
+            "mystery-purple-gradient": "linear-gradient(45deg, #6A00F4, #F20089)",
+          },
+          boxShadow: {
+            glow: "0 0 0 1px rgba(255,255,255,0.08), 0 10px 40px rgba(0,0,0,0.55)",
+            "glow-pink": "0 0 0 1px rgba(242,0,137,0.25), 0 18px 60px rgba(242,0,137,0.12)",
+            "glow-cyan": "0 0 0 1px rgba(0,212,255,0.22), 0 18px 60px rgba(0,212,255,0.10)",
           },
         },
-      };
-    </script>
+      },
+    };
+  </script>
 
-    <style>
-      * { font-family: "Poppins", sans-serif; }
-      body { background: #05040A; }
-      .mystery-bg { background-image: radial-gradient(1200px 500px at 20% 0%, rgba(106,0,244,0.25), transparent 60%), radial-gradient(900px 450px at 80% 10%, rgba(242,0,137,0.18), transparent 55%), radial-gradient(700px 400px at 50% 85%, rgba(0,212,255,0.12), transparent 55%), linear-gradient(to right, #24243e, #302b63, #0f0c29); }
-      .glass { background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.10); }
-      .glass-strong { background: rgba(15, 12, 41, 0.82); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.10); }
-      .noise {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.06;
-        mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-      }
-      /* Estilos para forms generados por Django (sin tocar form.as_p/as_div) */
-      .mystery-form :is(input, select, textarea) {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        background: rgba(0,0,0,0.35);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 0.75rem;
-        color: white;
-        outline: none;
-        transition: 150ms ease;
-      }
-      .mystery-form :is(input, select, textarea):focus {
-        border-color: rgba(0,212,255,0.65);
-        box-shadow: 0 0 0 4px rgba(0,212,255,0.12);
-        background: rgba(0,0,0,0.45);
-      }
-      .mystery-form input[type="checkbox"], .mystery-form input[type="radio"] {
-        width: auto;
-        padding: 0;
-        border-radius: 0.375rem;
-        accent-color: #F20089;
-      }
-      .mystery-form label { color: rgba(255,255,255,0.78); font-weight: 600; }
-      .mystery-form .helptext { display: block; margin-top: .25rem; color: rgba(255,255,255,0.55); font-size: .75rem; }
-      .mystery-form .errorlist { margin: .25rem 0 0; padding: 0; list-style: none; color: #FF4D6D; font-size: .85rem; }
-      .cyber-input { /* widgets en forms.py */
-        width: 100% !important;
-        padding: 0.75rem 1rem !important;
-        background: rgba(0,0,0,0.35) !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 0.75rem !important;
-        color: white !important;
-      }
-      .cyber-checkbox { accent-color: #F20089; }
-    </style>
+  <style>
+    * {
+      font-family: "Poppins", sans-serif;
+    }
 
-    {% block extra_head %}{% endblock %}
-  </head>
+    body {
+      background: #05040A;
+    }
 
-  <body class="text-white mystery-bg min-h-screen overflow-x-hidden">
-    <div class="noise"></div>
+    .mystery-bg {
+      background-image: radial-gradient(1200px 500px at 20% 0%, rgba(106, 0, 244, 0.25), transparent 60%), radial-gradient(900px 450px at 80% 10%, rgba(242, 0, 137, 0.18), transparent 55%), radial-gradient(700px 400px at 50% 85%, rgba(0, 212, 255, 0.12), transparent 55%), linear-gradient(to right, #24243e, #302b63, #0f0c29);
+    }
 
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/10">
-      <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4">
-        <a href="{% url 'home' %}" class="group flex items-center gap-2 font-extrabold tracking-wide">
-          <span class="text-xl md:text-2xl bg-gradient-to-r from-mystery-cyan to-mystery-pink bg-clip-text text-transparent">
-            MYSTERIO
-          </span>
-          <i class="fa-solid fa-cube text-mystery-gold group-hover:text-mystery-gold-dark transition-colors"></i>
+    .glass {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .glass-strong {
+      background: rgba(15, 12, 41, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+    }
+
+    /* Estilos para forms generados por Django (sin tocar form.as_p/as_div) */
+    .mystery-form :is(input, select, textarea) {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0.75rem;
+      color: white;
+      outline: none;
+      transition: 150ms ease;
+    }
+
+    .mystery-form :is(input, select, textarea):focus {
+      border-color: rgba(0, 212, 255, 0.65);
+      box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.12);
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .mystery-form input[type="checkbox"],
+    .mystery-form input[type="radio"] {
+      width: auto;
+      padding: 0;
+      border-radius: 0.375rem;
+      accent-color: #F20089;
+    }
+
+    .mystery-form label {
+      color: rgba(255, 255, 255, 0.78);
+      font-weight: 600;
+    }
+
+    .mystery-form .helptext {
+      display: block;
+      margin-top: .25rem;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: .75rem;
+    }
+
+    .mystery-form .errorlist {
+      margin: .25rem 0 0;
+      padding: 0;
+      list-style: none;
+      color: #FF4D6D;
+      font-size: .85rem;
+    }
+
+    .cyber-input {
+      /* widgets en forms.py */
+      width: 100% !important;
+      padding: 0.75rem 1rem !important;
+      background: rgba(0, 0, 0, 0.35) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 0.75rem !important;
+      color: white !important;
+    }
+
+    .cyber-checkbox {
+      accent-color: #F20089;
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body class="text-white mystery-bg min-h-screen overflow-x-hidden">
+  <div class="noise"></div>
+
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4">
+      <a href="{% url 'home' %}" class="group flex items-center gap-2 font-extrabold tracking-wide">
+        <span
+          class="text-xl md:text-2xl bg-gradient-to-r from-mystery-cyan to-mystery-pink bg-clip-text text-transparent">
+          MYSTERIO
+        </span>
+        <i class="fa-solid fa-cube text-mystery-gold group-hover:text-mystery-gold-dark transition-colors"></i>
+      </a>
+
+      <div class="hidden md:flex items-center gap-6 text-sm">
+        <a href="{% url 'home' %}" class="hover:text-mystery-cyan transition-colors">Catálogo</a>
+        <a href="{% url 'rastrear_pedido' %}"
+          class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
+          <i class="fa-solid fa-truck"></i> Rastreo
         </a>
-
-        <div class="hidden md:flex items-center gap-6 text-sm">
-          <a href="{% url 'home' %}" class="hover:text-mystery-cyan transition-colors">Catálogo</a>
-          <a href="{% url 'rastrear_pedido' %}" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
-            <i class="fa-solid fa-truck"></i> Rastreo
-          </a>
-          {% if user.is_staff or user.is_superuser or user|has_group:"Administrador" or user|has_group:"Bodeguero" or user|has_group:"Despachador" %}
-          {# IMPORTANTE: pb/-mb crea un "puente" de hover para que el menú no se cierre al bajar el mouse #}
-          <div class="relative group pb-6 -mb-6">
-            <button type="button" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
-              <i class="fa-solid fa-screwdriver-wrench"></i> Gestión <i class="fa-solid fa-chevron-down text-xs opacity-70"></i>
-            </button>
-            <div class="hidden group-hover:block hover:block absolute right-0 top-full mt-0 pt-3 w-64">
-              <div class="glass-strong rounded-2xl shadow-glow border border-white/10 overflow-hidden">
+        {% if user.is_staff or user.is_superuser or user|has_group:"Administrador" or user|has_group:"Bodeguero" or user|has_group:"Despachador" %}
+        {# IMPORTANTE: pb/-mb crea un "puente" de hover para que el menú no se cierre al bajar el mouse #}
+        <div class="relative group pb-6 -mb-6">
+          <button type="button" class="hover:text-mystery-cyan transition-colors inline-flex items-center gap-2">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Gestión <i
+              class="fa-solid fa-chevron-down text-xs opacity-70"></i>
+          </button>
+          <div class="hidden group-hover:block hover:block absolute right-0 top-full mt-0 pt-3 w-64">
+            <div class="glass-strong rounded-2xl shadow-glow border border-white/10 overflow-hidden">
               {% if perms.store.view_envio %}
-              <a href="{% url 'envios' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'envios' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-truck-fast text-mystery-pink w-5 mr-2"></i> Despachos
               </a>
               {% endif %}
               {% if perms.store.view_producto %}
-              <a href="{% url 'productos' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'productos' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-boxes-stacked text-mystery-pink w-5 mr-2"></i> Inventario
               </a>
               {% endif %}
               {% if perms.store.view_categoria %}
-              <a href="{% url 'categorias' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'categorias' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-tags text-mystery-pink w-5 mr-2"></i> Categorías
               </a>
               {% endif %}
               {% if perms.store.add_producto %}
-              <a href="{% url 'crear_productos' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'crear_productos' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-plus text-mystery-pink w-5 mr-2"></i> Nuevo producto
               </a>
               {% endif %}
               {% if perms.store.add_mystery_box %}
-              <a href="{% url 'crear_caja' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'crear_caja' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-square-plus text-mystery-pink w-5 mr-2"></i> Nueva caja
               </a>
               {% endif %}
               {% if user.is_superuser or user|has_group:"Administrador" %}
-              <a href="{% url 'admin_users_list' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'admin_users_list' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-users text-mystery-cyan w-5 mr-2"></i> Usuarios
               </a>
-              <a href="{% url 'suscripciones' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'suscripciones' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-users-gear text-mystery-pink w-5 mr-2"></i> Socios
               </a>
               {% endif %}
               {% if perms.store.view_cupon %}
-              <a href="{% url 'cupones_lista' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'cupones_lista' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-ticket text-mystery-gold w-5 mr-2"></i> Cupones
               </a>
               {% endif %}
+              {% if perms.store.change_configuracion %}
+              <a href="{% url 'editar_configuracion' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+                <i class="fa-solid fa-percent text-mystery-purple-electric w-5 mr-2"></i> Configurar IVA
+              </a>
+              {% endif %}
               {% if user.is_superuser or user|has_group:"Administrador" %}
-              <a href="{% url 'audit_log' %}" class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
+              <a href="{% url 'audit_log' %}"
+                class="block px-5 py-3 text-sm hover:bg-white/5 hover:text-mystery-cyan transition-colors">
                 <i class="fa-solid fa-clock-rotate-left text-mystery-pink w-5 mr-2"></i> Logs
               </a>
               {% endif %}
-              </div>
             </div>
           </div>
-          {% endif %}
         </div>
-
-        <div class="flex items-center gap-3">
-          <!-- Carrito de compras -->
-          <a href="{% url 'ver_carrito' %}" class="relative p-2 rounded-full hover:bg-white/5 transition-colors text-white/70 hover:text-mystery-cyan" aria-label="Carrito">
-            <i class="fa-solid fa-cart-shopping text-lg"></i>
-            {% load cart_tags %}
-            {% cart_count request as cart_count %}
-            {% if cart_count > 0 %}
-            <span class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-mystery-pink text-white text-[10px] font-extrabold flex items-center justify-center">
-              {{ cart_count }}
-            </span>
-            {% endif %}
-          </a>
-          
-          {% if user.is_authenticated %}
-          <a href="{% url 'perfil' %}" class="glass px-4 py-2 rounded-full border border-white/10 hover:border-white/20 transition-colors inline-flex items-center gap-2">
-            <i class="fa-solid fa-user-astronaut text-mystery-cyan"></i>
-            <span class="font-semibold text-sm">{{ user.username }}</span>
-            {% if user.membresia.estado == 'A' %}
-            <span class="bg-mystery-gold-gradient text-black px-2 py-0.5 rounded text-[11px] font-extrabold tracking-wide">PASS</span>
-            {% endif %}
-          </a>
-          <form action="{% url 'logout' %}" method="POST" class="inline">
-            {% csrf_token %}
-            <button type="submit" class="p-2 rounded-full hover:bg-white/5 transition-colors text-white/70 hover:text-mystery-pink" aria-label="Cerrar sesión">
-              <i class="fa-solid fa-power-off"></i>
-            </button>
-          </form>
-          {% else %}
-          <a href="{% url 'login' %}" class="px-5 py-2.5 rounded-full bg-mystery-purple-gradient shadow-glow-pink text-white font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform">
-            Iniciar sesión
-          </a>
-          {% endif %}
-        </div>
+        {% endif %}
       </div>
-    </nav>
 
+      <div class="flex items-center gap-3">
+        <!-- Carrito de compras -->
+        <a href="{% url 'ver_carrito' %}"
+          class="relative p-2 rounded-full hover:bg-white/5 transition-colors text-white/70 hover:text-mystery-cyan"
+          aria-label="Carrito">
+          <i class="fa-solid fa-cart-shopping text-lg"></i>
+          {% load cart_tags %}
+          {% cart_count request as cart_count %}
+          {% if cart_count > 0 %}
+          <span
+            class="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-mystery-pink text-white text-[10px] font-extrabold flex items-center justify-center">
+            {{ cart_count }}
+          </span>
+          {% endif %}
+        </a>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'perfil' %}"
+          class="glass px-4 py-2 rounded-full border border-white/10 hover:border-white/20 transition-colors inline-flex items-center gap-2">
+          <i class="fa-solid fa-user-astronaut text-mystery-cyan"></i>
+          <span class="font-semibold text-sm">{{ user.username }}</span>
+          {% if user.membresia.estado == 'A' %}
+          <span
+            class="bg-mystery-gold-gradient text-black px-2 py-0.5 rounded text-[11px] font-extrabold tracking-wide">PASS</span>
+          {% endif %}
+        </a>
+        <form action="{% url 'logout' %}" method="POST" class="inline">
+          {% csrf_token %}
+          <button type="submit"
+            class="p-2 rounded-full hover:bg-white/5 transition-colors text-white/70 hover:text-mystery-pink"
+            aria-label="Cerrar sesión">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}"
+          class="px-5 py-2.5 rounded-full bg-mystery-purple-gradient shadow-glow-pink text-white font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform">
+          Iniciar sesión
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-24">
     <!-- Mensajes Flash de Django -->
     {% if messages %}
-      <div class="max-w-7xl mx-auto px-4 mt-6">
-        {% for message in messages %}
-          <div class="p-4 mb-4 rounded-xl border flex items-center gap-3
-            {% if message.tags == 'error' %}bg-red-500/10 border-red-500/30 text-red-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
-            {% if message.tags == 'error' %}
-              <i class="fa-solid fa-circle-exclamation"></i>
-            {% else %}
-              <i class="fa-solid fa-circle-check"></i>
-            {% endif %}
-            {{ message }}
-          </div>
-        {% endfor %}
+    <div class="max-w-7xl mx-auto px-4 mt-6">
+      {% for message in messages %}
+      <div
+        class="p-4 mb-4 rounded-xl border flex items-center gap-3
+            {% if 'error' in message.tags %}bg-red-500/10 border-red-500/30 text-red-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+        {% if 'error' in message.tags %}
+        <i class="fa-solid fa-circle-exclamation"></i>
+        {% else %}
+        <i class="fa-solid fa-circle-check"></i>
+        {% endif %}
+        {{ message }}
       </div>
+      {% endfor %}
+    </div>
     {% endif %}
 
-    <main class="pt-24">
-      {% block contenido %}{% endblock %}
-    </main>
+    {% block contenido %}{% endblock %}
+  </main>
 
-    <footer class="mt-16 border-t border-white/10 bg-black/30">
-      <div class="max-w-7xl mx-auto px-4 md:px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-3">
-        <p class="text-white/60 text-sm">&copy; 2026 Mysterio Shop. Quito, Ecuador.</p>
-        <p class="text-white/50 text-xs">Dark Mystery Shop UI — Tailwind (CDN) + glassmorphism.</p>
-      </div>
-    </footer>
-  </body>
+  <footer class="mt-16 border-t border-white/10 bg-black/30">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-3">
+      <p class="text-white/60 text-sm">&copy; 2026 Mysterio Shop. Quito, Ecuador.</p>
+      <p class="text-white/50 text-xs">Dark Mystery Shop UI — Tailwind (CDN) + glassmorphism.</p>
+    </div>
+  </footer>
+</body>
+
 </html>

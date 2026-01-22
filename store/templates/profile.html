@@ -3,8 +3,7 @@
     <!-- User Profile Card -->
     <div class="glass-card rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 mb-8">
         <div
-            class="w-20 h-20 rounded-full bg-mystery-purple-gradient flex items-center justify-center text-3xl font-extrabold flex-shrink-0"
-        >
+            class="w-20 h-20 rounded-full bg-mystery-purple-gradient flex items-center justify-center text-3xl font-extrabold flex-shrink-0">
             {{ user.username|first|upper }}
         </div>
         <div>
@@ -15,26 +14,23 @@
 
     <!-- Membership Card -->
     <div
-        class="bg-mystery-purple/10 border-2 border-mystery-purple rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
-    >
+        class="bg-mystery-purple/10 border-2 border-mystery-purple rounded-2xl p-6 md:p-8 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
             <h3 class="text-mystery-cyan mb-2 text-lg md:text-xl font-semibold">
                 <i class="fa-solid fa-crown"></i> Mysterio Pass
             </h3>
-            {% if user.membresia.estado == 'A' %}
+            {% if suscripcion and suscripcion.estado == 'A' %}
             <p class="text-sm md:text-base">
-                Tu membresía está <strong class="text-mystery-success">ACTIVA</strong>. Vence el: {{
-                user.membresia.fecha_proximo_pago|date:"d M Y" }}
+                Tu membresía está <strong class="text-mystery-success">ACTIVA</strong>. Vence el:
+                {{suscripcion.fecha_proximo_pago|date:"d M Y" }}
             </p>
             {% else %}
             <p class="text-white/60 text-sm md:text-base">No tienes una membresía activa actualmente.</p>
             {% endif %}
         </div>
-        {% if user.membresia.estado != 'A' %}
-        <a
-            href="{% url 'suscribirse_premium' %}"
-            class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap"
-        >
+        {% if not suscripcion or suscripcion.estado != 'A' %}
+        <a href="{% url 'suscribirse_premium' %}"
+            class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap">
             Activar por $9.99
         </a>
         {% endif %}
@@ -51,6 +47,7 @@
                         <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Caja</th>
                         <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Fecha</th>
                         <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Estado</th>
+                        <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Total</th>
                         <th class="text-mystery-cyan py-4 px-4 text-xs uppercase tracking-widest">Rastreo</th>
                     </tr>
                 </thead>
@@ -60,11 +57,11 @@
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="py-4 px-4">
                             <div class="flex flex-col gap-1">
-                            {% for item in pedido.list %}
+                                {% for item in pedido.list %}
                                 <span class="text-sm font-medium text-white/90">
                                     <i class="fa-solid fa-box text-mystery-purple mr-2"></i>{{ item.caja.nombre }}
                                 </span>
-                            {% endfor %}
+                                {% endfor %}
                             </div>
                         </td>
                         <td class="py-4 px-4 text-white/60">{{ pedido.list.0.fecha_envio|date:"d M Y" }}</td>
@@ -74,12 +71,50 @@
                             </span>
                         </td>
                         <td class="py-4 px-4">
-                            <a
-                                href="{% url 'rastrear_pedido' %}?guia={{ pedido.grouper }}"
-                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors font-mono text-xs"
-                            >
-                                <i class="fa-solid fa-magnifying-glass-location"></i> {{ pedido.grouper }}
-                            </a>
+                            <div class="flex flex-col gap-1">
+                                {% for item in pedido.list %}
+                                {% if item.valor_total > 0 %}
+                                <span class="text-sm font-bold text-mystery-gold">
+                                    ${{ item.valor_total }}
+                                    {% with iva=item.iva_porcentaje %}
+                                    <span class="text-[10px] text-white/50 font-normal">
+                                        ({{ iva }}% IVA)
+                                    </span>
+                                    {% endwith %}
+                                </span>
+                                {% else %}
+                                <span class="text-sm text-white/30 italic">N/A</span>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            {% with estado_envio=pedido.list.0.estado %}
+                            <div class="flex flex-col gap-2 items-start">
+                                <a href="{% url 'rastrear_pedido' %}?guia={{ pedido.grouper }}"
+                                    class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors font-mono text-xs flex items-center gap-1 mb-1">
+                                    <i class="fa-solid fa-magnifying-glass-location"></i> {{ pedido.grouper }}
+                                </a>
+
+                                {% if estado_envio == 'E' %}
+                                <a href="{% url 'confirmar_recepcion' pedido.list.0.id %}"
+                                    class="flex items-center gap-2 px-4 py-2 rounded-xl bg-mystery-success/10 border border-mystery-success/20 text-mystery-success hover:bg-mystery-success/20 transition-all group"
+                                    title="Confirmar entrega">
+                                    <div
+                                        class="h-6 w-6 rounded-full bg-mystery-success/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-check text-xs"></i>
+                                    </div>
+                                    <span class="text-xs font-bold uppercase tracking-wide">Recibido</span>
+                                </a>
+                                {% elif estado_envio == 'R' %}
+                                <div
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
+                                    <i class="fa-solid fa-box-open"></i>
+                                    <span class="text-xs font-medium uppercase">Entregado</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endwith %}
                         </td>
                     </tr>
                     {% endfor %}
