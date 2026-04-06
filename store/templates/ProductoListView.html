@@ -1,51 +1,56 @@
-{% extends "index.html" %} {% block contenido %}
-<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-        <h2 class="text-2xl md:text-3xl font-extrabold">
-            Gestión de <span class="text-mystery-cyan">Inventario</span>
-        </h2>
-        <a
-            href="{% url 'crear_productos' %}"
-            class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300"
-        >
-            + Nuevo Producto
-        </a>
-    </div>
+{% extends "index.html" %}
 
-    <div class="glass-card rounded-2xl overflow-hidden border border-white/10">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-white/10">
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
-                            Producto
-                        </th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">Stock</th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
-                            Valor Base
-                        </th>
-                        <th class="text-mystery-cyan text-xs uppercase tracking-widest py-4 px-6 text-left">
-                            Acciones
-                        </th>
+{% block contenido %}
+<div class="min-h-screen pt-24 pb-12">
+    <div class="w-full">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-white/20 pb-8">
+            <div>
+                <h1 class="serif-display text-4xl md:text-6xl font-black uppercase italic mb-2">
+                    Inventory <span class="text-brand-red">Control</span>
+                </h1>
+                <p class="uppercase tracking-widest text-xs text-white/40">Product Catalog Management</p>
+            </div>
+            <a href="{% url 'crear_productos' %}" class="px-8 py-4 border border-brand-red bg-brand-red hover:bg-white hover:border-white hover:text-black text-white uppercase tracking-[0.2em] text-[10px] font-bold transition-colors">
+                <i class="fa-solid fa-plus mr-2"></i> Add Product
+            </a>
+        </div>
+
+        <div class="border border-white/20 overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-white/5 border-b border-white/20 text-[10px] uppercase tracking-[0.3em] text-white/60">
+                    <tr>
+                        <th class="p-6 font-bold">Product Name</th>
+                        <th class="p-6 font-bold">Stock Quantity</th>
+                        <th class="p-6 font-bold">Base Value</th>
+                        <th class="p-6 font-bold text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-white/10 text-sm">
                     {% for producto in productos %}
-                    <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td class="py-4 px-6">{{ producto.nombre }}</td>
-                        <td
-                            class="py-4 px-6 {% if producto.stock < 5 %}text-mystery-pink font-semibold{% else %}text-white{% endif %}"
-                        >
-                            {{ producto.stock }}
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="p-6">
+                            <span class="font-bold text-white uppercase tracking-widest text-sm">{{ producto.nombre }}</span>
                         </td>
-                        <td class="py-4 px-6">${{ producto.valor }}</td>
-                        <td class="py-4 px-6">
-                            <a
-                                href="{% url 'editar_producto' producto.pk %}"
-                                class="text-mystery-cyan hover:text-mystery-cyan/80 transition-colors"
-                            >
-                                <i class="fa-solid fa-pen-to-square"></i> Editar
+                        <td class="p-6 font-mono text-xs">
+                            {% if producto.stock < 5 %}
+                            <span class="text-brand-red font-bold uppercase tracking-widest"><i class="fa-solid fa-triangle-exclamation mr-2"></i>{{ producto.stock }} Units</span>
+                            {% else %}
+                            <span class="text-white uppercase tracking-widest">{{ producto.stock }} Units</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-6 font-black text-brand-red text-lg">
+                            ${{ producto.valor }}
+                        </td>
+                        <td class="p-6 text-right">
+                            <a href="{% url 'editar_producto' producto.pk %}" class="text-white/40 hover:text-white uppercase tracking-widest text-[10px] font-bold transition-colors">
+                                Modify
                             </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-16 text-center text-white/30">
+                            <p class="uppercase tracking-[0.3em] text-sm">No products in inventory.</p>
                         </td>
                     </tr>
                     {% endfor %}

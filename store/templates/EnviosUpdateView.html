@@ -1,97 +1,113 @@
-{% extends 'index.html' %} {% load widget_tweaks %} {% block contenido %}
-<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
-    <div class="mb-8">
-        <h2 class="text-2xl md:text-3xl font-extrabold mb-2">
-            Packing: Envio <span class="text-mystery-cyan">#{{ object.id }}</span>
-        </h2>
-        <p class="text-white/60">Destino: <strong class="text-white">{{ object.ciudad }}, {{ object.pais }}</strong></p>
-    </div>
+{% extends 'index.html' %} 
 
-    <form method="post" class="mystery-form">
-        {% csrf_token %}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 glass-card p-6 md:p-8 rounded-2xl border-2 border-white/10">
-                <!-- Contenido de las Cajas -->
-                <div>
-                    <h3 class="font-bold text-white mb-4">
-                        <i class="fa-solid fa-boxes-stacked text-mystery-cyan mr-2"></i>Contenido del Pedido
-                    </h3>
+{% block contenido %}
+<div class="min-h-screen pt-24 pb-12">
+    <div class="w-full">
+        <a href="{% url 'envios' %}" class="inline-flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
+            <i class="fa-solid fa-arrow-left"></i> Return to Queue
+        </a>
 
-                    <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        {% for hermano in envios_hermanos %}
-                        <div class="glass-strong p-4 rounded-xl border border-white/5">
-                            <div class="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                                <h4 class="font-bold text-mystery-purple">{{ hermano.caja.nombre }}</h4>
-                                <span class="text-xs text-white/40">ID: {{ hermano.id }}</span>
-                            </div>
-
-                            <div class="space-y-2">
-                                {% for producto in hermano.productos.all %}
-                                <label
-                                    class="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer group transition-all"
-                                >
-                                    <div class="relative flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            class="peer appearance-none w-5 h-5 rounded-md border border-white/20 checked:bg-mystery-success checked:border-mystery-success transition-all bg-black/20"
-                                        />
-                                        <i
-                                            class="fa-solid fa-check text-black text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-all"
-                                        ></i>
-                                    </div>
-                                    <div class="flex-1 flex justify-between text-sm">
-                                        <span class="text-white/80 group-hover:text-white transition-colors"
-                                            >{{ producto.nombre }}</span
-                                        >
-                                        <span class="font-mono text-mystery-gold text-xs">${{ producto.valor }}</span>
-                                    </div>
-                                </label>
-                                {% empty %}
-                                <p class="text-white/40 text-xs italic p-2">Caja vacía (Error: verificar generación)</p>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="mt-8 p-6 bg-black/30 rounded-xl border border-white/10">
-                    <div class="flex justify-between mb-3">
-                        <span class="text-white/60">Pagado por cliente:</span>
-                        <span class="text-mystery-success font-semibold">${{ finanzas.pagado }}</span>
-                    </div>
-                    <div class="flex justify-between mb-3">
-                        <span class="text-white/60">Costo inventario:</span>
-                        <span class="text-mystery-pink font-semibold">-${{ finanzas.costo }}</span>
-                    </div>
-                    <hr class="border-white/10 my-4" />
-                    <div class="flex justify-between font-bold text-lg">
-                        <span class="text-white">Margen Operativo:</span>
-                        <span class="text-mystery-cyan">${{ finanzas.margen }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card p-6 md:p-8 rounded-2xl border-2 border-white/10">
-                <h3 class="text-xl font-semibold mb-6">Finalizar Despacho</h3>
-                <div class="mb-6">
-                    <label class="block text-mystery-cyan font-semibold mb-2 text-sm">
-                        Código Courier (Servientrega)
-                    </label>
-                    {{ form.numero_guia|add_class:"cyber-input" }}
-                </div>
-                <div class="mb-6">
-                    <label class="block text-mystery-cyan font-semibold mb-2 text-sm">Actualizar Estado</label>
-                    {{ form.estado|add_class:"cyber-input" }}
-                </div>
-                <button
-                    type="submit"
-                    class="w-full px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300"
-                >
-                    Confirmar Envío
-                </button>
+        <div class="mb-12 border-b border-white/20 pb-8 flex justify-between items-end gap-4">
+            <div>
+                <h2 class="serif-display text-4xl md:text-6xl font-black italic uppercase">
+                    Packing <span class="text-brand-red">#{{ object.id }}</span>
+                </h2>
+                <p class="uppercase tracking-widest text-xs text-white/40 mt-2">Target: <strong class="text-white">{{ object.ciudad }}, {{ object.pais }}</strong></p>
             </div>
         </div>
-    </form>
-    {% endblock %}
+
+        <form method="post" class="mystery-form">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+                <!-- Contenido de las Cajas -->
+                <div class="lg:col-span-2 space-y-12">
+                    <div>
+                        <h3 class="serif-display text-2xl font-black italic uppercase border-b border-white/20 pb-4 mb-8">
+                            Cargo Manifesto
+                        </h3>
+
+                        <div class="space-y-8 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
+                            {% for hermano in envios_hermanos %}
+                            <div class="border border-white/20 p-6">
+                                <div class="flex items-center justify-between mb-4 border-b border-white/20 pb-4">
+                                    <h4 class="font-bold text-white uppercase tracking-widest text-sm">{{ hermano.caja.nombre }}</h4>
+                                    <span class="text-[10px] uppercase tracking-widest text-white/40">Unit: {{ hermano.id }}</span>
+                                </div>
+
+                                <div class="space-y-4">
+                                    {% for producto in hermano.productos.all %}
+                                    <label class="flex items-center gap-4 p-4 border border-white/10 hover:border-white transition-colors cursor-pointer group">
+                                        <div class="relative flex items-center">
+                                            <input type="checkbox" class="peer appearance-none w-5 h-5 border border-white/50 checked:bg-brand-red checked:border-brand-red transition-all bg-black cursor-pointer" />
+                                            <i class="fa-solid fa-check text-white text-xs absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-all pointer-events-none"></i>
+                                        </div>
+                                        <div class="flex-1 flex justify-between items-center text-sm">
+                                            <span class="text-white uppercase tracking-widest text-xs font-bold">{{ producto.nombre }}</span>
+                                            <span class="font-mono text-white/50 text-[10px]">${{ producto.valor }}</span>
+                                        </div>
+                                    </label>
+                                    {% empty %}
+                                    <p class="text-brand-red text-[10px] uppercase tracking-widest p-2">Empty Unit (Generation Error)</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="border border-white/20 p-8">
+                        <h3 class="serif-display text-2xl font-black italic uppercase border-b border-white/20 pb-4 mb-6">
+                            Financials
+                        </h3>
+                        <div class="space-y-4 text-[10px] uppercase tracking-[0.2em] font-bold">
+                            <div class="flex justify-between text-white/60">
+                                <span>Gross Revenue:</span>
+                                <span class="text-white text-sm">${{ finanzas.pagado }}</span>
+                            </div>
+                            <div class="flex justify-between text-white/60">
+                                <span>Inventory Cost:</span>
+                                <span class="text-white text-sm">-${{ finanzas.costo }}</span>
+                            </div>
+                            <hr class="border-white/20 my-4" />
+                            <div class="flex justify-between items-end">
+                                <span class="text-white">Net Margin:</span>
+                                <span class="text-brand-red text-2xl font-black serif-display italic">${{ finanzas.margen }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finalizar -->
+                <div class="lg:col-span-1">
+                    <div class="border border-white/20 p-8 sticky top-24">
+                        <h3 class="serif-display text-2xl font-black italic uppercase border-b border-white/20 pb-4 mb-8">
+                            Execution
+                        </h3>
+                        
+                        <div class="space-y-8 mb-8">
+                            <div>
+                                <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                    Courier Tracking Code
+                                </label>
+                                {{ form.numero_guia }}
+                            </div>
+                            <div>
+                                <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                    Status Override
+                                </label>
+                                <div class="relative">
+                                    {{ form.estado }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full py-4 border border-brand-red bg-brand-red hover:bg-white hover:border-white hover:text-black text-white uppercase tracking-[0.2em] text-[10px] font-bold transition-colors">
+                            Confirm Dispatch
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}

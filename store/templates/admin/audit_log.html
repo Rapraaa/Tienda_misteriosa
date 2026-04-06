@@ -1,74 +1,73 @@
 {% extends "index.html" %}
 
-{% block title %}Logs de Auditoría | Mysterio{% endblock %}
+{% block title %}Audit Logs | Mysterio{% endblock %}
 
 {% block contenido %}
-<section class="max-w-7xl mx-auto px-4 md:px-6 py-16">
-  <div class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-extrabold">
-      <i class="fa-solid fa-clock-rotate-left text-mystery-cyan"></i> Logs de Auditoría
+<section class="min-h-screen pt-24 pb-12">
+  <div class="mb-16 border-b border-white/20 pb-8">
+    <h1 class="serif-display text-4xl md:text-6xl font-black uppercase italic mb-2">
+      Audit <span class="text-brand-red">Logs</span>
     </h1>
-    <p class="text-white/60 text-sm mt-2">Historial de cambios en el sistema</p>
+    <p class="uppercase tracking-widest text-xs text-white/40">System Modification History</p>
   </div>
 
-  <div class="glass-strong rounded-3xl border border-white/10 overflow-hidden">
-    <table class="w-full">
-      <thead class="bg-white/5 border-b border-white/10">
-        <tr>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Fecha</th>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Modelo</th>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Objeto</th>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Acción</th>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Usuario</th>
-          <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Cambios</th>
+  <div class="border border-white/20 overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-white/5 border-b border-white/20">
+        <tr class="text-[10px] uppercase tracking-[0.3em] text-white/60">
+          <th class="px-6 py-6 font-bold">Timestamp</th>
+          <th class="px-6 py-6 font-bold">Model</th>
+          <th class="px-6 py-6 font-bold">Target</th>
+          <th class="px-6 py-6 font-bold">Action</th>
+          <th class="px-6 py-6 font-bold">Operator</th>
+          <th class="px-6 py-6 font-bold">Delta</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-white/10">
         {% for log in logs %}
-        <tr class="hover:bg-white/5 transition-colors">
-          <td class="px-6 py-4 text-sm">
-            <div class="text-white">{{ log.date|date:"d/m/Y" }}</div>
-            <div class="text-white/50 text-xs">{{ log.date|date:"H:i:s" }}</div>
+        <tr class="hover:bg-white/5 transition-colors text-sm">
+          <td class="px-6 py-4 font-mono uppercase text-xs">
+            <div class="text-white">{{ log.date|date:"d M Y" }}</div>
+            <div class="text-brand-red">{{ log.date|date:"H:i:s" }}</div>
           </td>
           <td class="px-6 py-4">
-            <span class="px-3 py-1 rounded-full bg-mystery-cyan/20 text-mystery-cyan text-xs font-bold">
+            <span class="px-3 py-1 border border-white/20 text-white text-[10px] uppercase tracking-widest">
               {{ log.model }}
             </span>
           </td>
-          <td class="px-6 py-4 text-sm font-mono">
+          <td class="px-6 py-4 text-xs font-mono text-white/70">
             {{ log.object }}
           </td>
           <td class="px-6 py-4">
             {% if log.action == 'Creado' %}
-              <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">
-                <i class="fa-solid fa-plus"></i> {{ log.action }}
+              <span class="px-3 py-1 border border-white text-white text-[10px] uppercase tracking-widest font-bold">
+                <i class="fa-solid fa-plus mr-1"></i> Create
               </span>
             {% elif log.action == 'Modificado' %}
-              <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold">
-                <i class="fa-solid fa-pen"></i> {{ log.action }}
+              <span class="px-3 py-1 border border-white/40 text-white/70 text-[10px] uppercase tracking-widest font-bold">
+                <i class="fa-solid fa-pen mr-1"></i> Modify
               </span>
             {% elif log.action == 'Eliminado' %}
-              <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">
-                <i class="fa-solid fa-trash"></i> {{ log.action }}
+              <span class="px-3 py-1 border border-brand-red text-brand-red text-[10px] uppercase tracking-widest font-bold">
+                <i class="fa-solid fa-trash mr-1"></i> Delete
               </span>
             {% endif %}
           </td>
-          <td class="px-6 py-4 text-sm">
+          <td class="px-6 py-4 text-xs uppercase tracking-widest font-bold">
             {% if log.user %}
-              <i class="fa-solid fa-user text-mystery-gold"></i> {{ log.user.username }}
+              {{ log.user.username }}
             {% else %}
-              <span class="text-white/50">Sistema</span>
+              <span class="text-brand-red">SYSTEM</span>
             {% endif %}
           </td>
-          <td class="px-6 py-4 text-sm text-white/70">
-            {{ log.changes }}
+          <td class="px-6 py-4 text-xs font-mono text-white/50 max-w-xs truncate" title="{{ log.changes }}">
+            {{ log.changes|default:"--" }}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6" class="px-6 py-12 text-center text-white/50">
-            <i class="fa-solid fa-inbox text-4xl mb-3"></i>
-            <p>No hay registros de auditoría</p>
+          <td colspan="6" class="px-6 py-16 text-center text-white/30">
+            <p class="uppercase tracking-[0.3em] text-sm">No audit records found.</p>
           </td>
         </tr>
         {% endfor %}
@@ -78,27 +77,25 @@
 
   <!-- Paginación -->
   {% if is_paginated %}
-  <div class="mt-6 flex justify-center gap-2">
+  <div class="mt-8 flex justify-between items-center border border-white/20 p-4">
     {% if page_obj.has_previous %}
-      <a href="?page=1" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
-        <i class="fa-solid fa-angles-left"></i>
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-6 py-2 border border-white hover:bg-white hover:text-black uppercase text-[10px] tracking-widest font-bold transition-colors">
+        Prev
       </a>
-      <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
-        <i class="fa-solid fa-angle-left"></i>
-      </a>
+    {% else %}
+      <div class="px-6 py-2 opacity-0">Prev</div>
     {% endif %}
     
-    <span class="px-4 py-2 rounded-lg bg-mystery-cyan/20 text-mystery-cyan border border-mystery-cyan/30">
-      Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    <span class="text-white/40 uppercase text-[10px] tracking-widest">
+      Sector {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
     </span>
     
     {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
-        <i class="fa-solid fa-angle-right"></i>
+      <a href="?page={{ page_obj.next_page_number }}" class="px-6 py-2 border border-white hover:bg-white hover:text-black uppercase text-[10px] tracking-widest font-bold transition-colors">
+        Next
       </a>
-      <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-colors">
-        <i class="fa-solid fa-angles-right"></i>
-      </a>
+    {% else %}
+      <div class="px-6 py-2 opacity-0">Next</div>
     {% endif %}
   </div>
   {% endif %}

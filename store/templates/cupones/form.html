@@ -3,114 +3,122 @@
 {% block title %}{% if object %}Editar{% else %}Crear{% endif %} Cupón | Mysterio{% endblock %}
 
 {% block contenido %}
-<section class="max-w-3xl mx-auto px-4 md:px-6 py-16">
-  <div class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-extrabold">
-      {% if object %}Editar Cupón{% else %}Crear Nuevo Cupón{% endif %}
-    </h1>
-    <p class="text-white/60 text-sm mt-2">Configura las opciones del cupón de descuento</p>
-  </div>
-
-  <div class="glass-strong rounded-3xl border border-white/10 p-8">
-    <form method="post">
-      {% csrf_token %}
-      
-      {% if form.errors %}
-      <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400">
-        <h3 class="font-bold mb-2">❌ Errores en el formulario:</h3>
-        {{ form.errors }}
-      </div>
-      {% endif %}
-      
-      <div class="space-y-6">
-        <!-- Código del cupón -->
-        <div>
-          <label class="block text-white/70 text-sm font-semibold mb-2">
-            {{ form.codigo.label }}
-            <span class="text-red-400">*</span>
-          </label>
-          {{ form.codigo }}
-          {% if form.codigo.help_text %}
-          <p class="text-white/50 text-xs mt-1">{{ form.codigo.help_text }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Descuentos -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.descuento_porcentaje.label }}
-            </label>
-            {{ form.descuento_porcentaje }}
-            <p class="text-white/50 text-xs mt-1">Dejar en 0 si usas descuento fijo</p>
-          </div>
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.descuento_fijo.label }}
-            </label>
-            {{ form.descuento_fijo }}
-            <p class="text-white/50 text-xs mt-1">Dejar en 0 si usas porcentaje</p>
-          </div>
-        </div>
-
-        <!-- Fechas -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.fecha_inicio.label }}
-              <span class="text-red-400">*</span>
-            </label>
-            {{ form.fecha_inicio }}
-          </div>
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.fecha_expiracion.label }}
-              <span class="text-red-400">*</span>
-            </label>
-            {{ form.fecha_expiracion }}
-          </div>
-        </div>
-
-        <!-- Configuración adicional -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.usos_maximos.label }}
-            </label>
-            {{ form.usos_maximos }}
-            <p class="text-white/50 text-xs mt-1">Dejar vacío para ilimitado</p>
-          </div>
-          <div>
-            <label class="block text-white/70 text-sm font-semibold mb-2">
-              {{ form.monto_minimo.label }}
-            </label>
-            {{ form.monto_minimo }}
-          </div>
-        </div>
-
-        <!-- Checkboxes -->
-        <div class="space-y-4">
-          <div class="flex items-center gap-3">
-            {{ form.activo }}
-            <label class="text-white/70 text-sm">{{ form.activo.label }}</label>
-          </div>
-          <div class="flex items-center gap-3">
-            {{ form.solo_premium }}
-            <label class="text-white/70 text-sm">{{ form.solo_premium.label }}</label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botones -->
-      <div class="mt-8 flex gap-3">
-        <button type="submit" class="px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform">
-          <i class="fa-solid fa-save"></i> Guardar
-        </button>
-        <a href="{% url 'cupones_lista' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest">
-          <i class="fa-solid fa-times"></i> Cancelar
+<div class="min-h-screen pt-24 pb-12 flex items-center justify-center">
+    <div class="w-full max-w-3xl">
+        <a href="{% url 'cupones_lista' %}" class="inline-flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
+            <i class="fa-solid fa-arrow-left"></i> Return to Registry
         </a>
-      </div>
-    </form>
-  </div>
-</section>
+
+        <div class="border border-white/20 p-8 md:p-16 relative">
+            <!-- Header -->
+            <div class="mb-12 border-b border-white/20 pb-8">
+                <h2 class="serif-display text-3xl md:text-5xl font-black italic">
+                    {% if object %}Modify <span class="text-brand-red">Token</span>{% else %}Issue <span class="text-brand-red">Token</span>{% endif %}
+                </h2>
+                <p class="uppercase tracking-[0.3em] text-xs text-white/40 mt-2">Discount Parameters</p>
+            </div>
+
+            <form method="post" class="space-y-12 mystery-form">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="p-6 border border-brand-red text-brand-red uppercase tracking-widest text-xs font-bold">
+                    <h3 class="mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Configuration Error:</h3>
+                    {{ form.errors }}
+                </div>
+                {% endif %}
+                
+                <div class="space-y-8">
+                    <!-- Código del cupón -->
+                    <div class="border border-white/20 p-6">
+                        <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                            {{ form.codigo.label }} <span class="text-brand-red">*</span>
+                        </label>
+                        {{ form.codigo }}
+                        {% if form.codigo.help_text %}
+                        <p class="text-[10px] uppercase tracking-widest text-white/40 mt-4">{{ form.codigo.help_text }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Descuentos -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.descuento_porcentaje.label }}
+                            </label>
+                            {{ form.descuento_porcentaje }}
+                            <p class="text-[10px] uppercase tracking-widest text-white/40 mt-4">Leave 0 if using fixed</p>
+                        </div>
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.descuento_fijo.label }}
+                            </label>
+                            {{ form.descuento_fijo }}
+                            <p class="text-[10px] uppercase tracking-widest text-white/40 mt-4">Leave 0 if using %</p>
+                        </div>
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.fecha_inicio.label }} <span class="text-brand-red">*</span>
+                            </label>
+                            {{ form.fecha_inicio }}
+                        </div>
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.fecha_expiracion.label }} <span class="text-brand-red">*</span>
+                            </label>
+                            {{ form.fecha_expiracion }}
+                        </div>
+                    </div>
+
+                    <!-- Configuración adicional -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.usos_maximos.label }}
+                            </label>
+                            {{ form.usos_maximos }}
+                            <p class="text-[10px] uppercase tracking-widest text-white/40 mt-4">Empty for infinite</p>
+                        </div>
+                        <div class="border border-white/20 p-6">
+                            <label class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                                {{ form.monto_minimo.label }}
+                            </label>
+                            {{ form.monto_minimo }}
+                        </div>
+                    </div>
+
+                    <!-- Checkboxes -->
+                    <div class="space-y-4 border border-white/20 p-6">
+                        <label class="relative flex items-center cursor-pointer mb-4">
+                            <div class="flex items-center h-5">
+                                {{ form.activo }}
+                            </div>
+                            <span class="ml-4 uppercase tracking-[0.2em] text-xs font-bold text-white">{{ form.activo.label }}</span>
+                        </label>
+                        <label class="relative flex items-center cursor-pointer">
+                            <div class="flex items-center h-5">
+                                {{ form.solo_premium }}
+                            </div>
+                            <span class="ml-4 uppercase tracking-[0.2em] text-xs font-bold text-white">{{ form.solo_premium.label }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="pt-8 flex flex-col md:flex-row gap-6 border-t border-white/20">
+                    <button type="submit" class="flex-1 py-4 border border-brand-red bg-brand-red text-white hover:bg-white hover:border-white hover:text-black uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        {% if object %}Save Modifications{% else %}Generate Token{% endif %}
+                    </button>
+                    <a href="{% url 'cupones_lista' %}" class="px-8 py-4 border border-white/40 text-white/60 hover:text-white hover:border-white text-center uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        Abort
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

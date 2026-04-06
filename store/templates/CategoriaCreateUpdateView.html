@@ -3,48 +3,53 @@
 {% block title %}{% if form.instance.pk %}Editar{% else %}Nueva{% endif %} categoría | Gestión{% endblock %}
 
 {% block contenido %}
-<section class="max-w-3xl mx-auto px-4 md:px-6 py-16">
-  <div class="glass-strong rounded-3xl border border-white/10 shadow-glow overflow-hidden">
-    <div class="px-6 md:px-10 py-8 md:py-10">
-      <div class="flex items-start justify-between gap-6">
-        <div>
-          <h1 class="text-3xl font-extrabold">
-            {% if form.instance.pk %}Editar{% else %}Nueva{% endif %}
-            <span class="bg-gradient-to-r from-mystery-cyan to-mystery-pink bg-clip-text text-transparent">Categoría</span>
-          </h1>
-          <p class="mt-2 text-white/65 text-sm">
-            Las categorías desactivadas no aparecen al crear productos/cajas, pero se mantienen para no romper relaciones.
-          </p>
-        </div>
-        <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-          <i class="fa-solid fa-tags text-mystery-gold text-xl"></i>
-        </div>
-      </div>
+<div class="min-h-screen pt-24 pb-12 flex items-center justify-center">
+    <div class="w-full max-w-2xl">
+        <a href="{% url 'categorias' %}" class="inline-flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
+            <i class="fa-solid fa-arrow-left"></i> Return to Registry
+        </a>
 
-      <form method="post" class="mystery-form mt-8 space-y-6">
-        {% csrf_token %}
+        <div class="border border-white/20 p-8 md:p-16 relative">
+            <div class="mb-12 border-b border-white/20 pb-8 flex justify-between items-end gap-4">
+                <div>
+                    <h2 class="serif-display text-4xl md:text-5xl font-black italic uppercase">
+                        {% if form.instance.pk %}Modify{% else %}New{% endif %}
+                        <span class="text-brand-red">Category</span>
+                    </h2>
+                    <p class="uppercase tracking-[0.3em] text-xs text-white/40 mt-2">Tag Configuration</p>
+                </div>
+            </div>
 
-        {% for field in form %}
-        <div>
-          <label for="{{ field.id_for_label }}" class="block text-xs uppercase tracking-widest text-white/70 mb-2">
-            {{ field.label }}
-          </label>
-          {{ field }}
-          {% if field.errors %}{{ field.errors }}{% endif %}
-          {% if field.help_text %}<span class="helptext">{{ field.help_text|safe }}</span>{% endif %}
-        </div>
-        {% endfor %}
+            <form method="post" class="space-y-12 mystery-form">
+                {% csrf_token %}
 
-        <div class="pt-2 flex flex-col sm:flex-row gap-3">
-          <a href="{% url 'categorias' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-xs uppercase tracking-widest inline-flex items-center justify-center gap-2">
-            <i class="fa-solid fa-arrow-left text-mystery-cyan"></i> Volver
-          </a>
-          <button type="submit" class="flex-1 px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar
-          </button>
+                <div class="space-y-8">
+                    {% for field in form %}
+                    <div class="border border-white/20 p-6">
+                        <label for="{{ field.id_for_label }}" class="block uppercase tracking-[0.2em] text-[10px] font-bold text-white mb-4">
+                            {{ field.label }} {% if field.field.required %}<span class="text-brand-red">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <p class="text-[10px] uppercase tracking-[0.2em] text-brand-red mt-2 font-bold">{{ field.errors.0 }}</p>
+                        {% endif %}
+                        {% if field.help_text %}
+                        <p class="text-[10px] uppercase tracking-widest text-white/40 mt-4">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="pt-8 flex flex-col md:flex-row gap-6 border-t border-white/20">
+                    <button type="submit" class="flex-1 py-4 border border-brand-red bg-brand-red text-white hover:bg-white hover:border-white hover:text-black uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        {% if form.instance.pk %}Save Modifications{% else %}Create Category{% endif %}
+                    </button>
+                    <a href="{% url 'categorias' %}" class="px-8 py-4 border border-white/40 text-white/60 hover:text-white hover:border-white text-center uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        Abort
+                    </a>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
-</section>
+</div>
 {% endblock %}

@@ -1,101 +1,96 @@
-{% extends 'index.html' %} {% block contenido %}
-<div class="max-w-2xl mx-auto px-4 md:px-6 py-20">
-    <div class="glass-card rounded-3xl p-8 md:p-10 border-2 border-white/10 text-center">
-        <h2 class="text-2xl md:text-3xl font-extrabold mb-8">
-            Rastrea tu <span class="text-mystery-cyan">Misterio</span>
+{% extends 'index.html' %} 
+{% block contenido %}
+<div class="max-w-3xl mx-auto py-20">
+    <div class="border border-white/20 p-8 md:p-16">
+        <h2 class="serif-display text-4xl md:text-6xl font-black uppercase italic mb-12">
+            Trace<br/>
+            <span class="text-brand-red">Your Order</span>
         </h2>
 
-        <form method="GET" class="flex flex-col sm:flex-row gap-4 mb-8">
+        <form method="GET" class="flex flex-col md:flex-row gap-8 mb-16 mystery-form">
             <input
                 type="text"
                 name="guia"
                 placeholder="MYS-XXXXXX"
                 value="{{ guia_buscada|default:'' }}"
-                class="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/10 text-white placeholder-white/50 focus:border-mystery-cyan focus:outline-none focus:ring-2 focus:ring-mystery-cyan/20"
+                class="flex-1 text-2xl uppercase tracking-widest placeholder:text-white/20"
             />
             <button
                 type="submit"
-                class="px-6 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                class="px-12 py-4 border border-white uppercase tracking-[0.3em] text-xs font-bold hover:bg-white hover:text-black transition-colors duration-300"
             >
-                Buscar
+                Search
             </button>
         </form>
 
         {% if error %}
-        <p class="text-mystery-pink mb-4 font-semibold">{{ error }}</p>
-        {% endif %} {% if envio %}
-        <div class="text-left glass-card p-6 rounded-xl border border-white/10">
-            <div class="flex justify-between items-start mb-6">
+        <p class="text-brand-red uppercase tracking-widest text-sm font-bold mb-8">{{ error }}</p>
+        {% endif %} 
+        
+        {% if envio %}
+        <div class="border-t border-white/20 pt-12 reveal">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-16">
                 <div>
-                    <h4 class="text-mystery-cyan font-bold text-xl">{{ envio.caja.nombre }}</h4>
-                    <p class="text-white/60 text-sm">ID Interno: {{ envio.codigo_rastreo_interno }}</p>
+                    <h4 class="serif-display text-3xl italic font-bold">{{ envio.caja.nombre }}</h4>
+                    <p class="text-white/40 font-mono text-sm tracking-widest uppercase mt-2">ID: {{ envio.codigo_rastreo_interno }}</p>
                 </div>
-                <span class="px-3 py-1 rounded-full bg-mystery-cyan/20 text-mystery-cyan text-xs font-bold uppercase">
+                <span class="border border-brand-red text-brand-red px-4 py-2 text-xs font-bold uppercase tracking-widest">
                     {{ envio.get_estado_display }}
                 </span>
             </div>
 
-            <div class="relative flex justify-between mb-10 mt-8">
-                <div class="absolute top-1/2 left-0 w-full h-1 bg-white/10 -translate-y-1/2 z-0"></div>
+            <!-- Brutalist Progress Bar -->
+            <div class="relative mb-20 mt-12">
+                <div class="absolute top-1/2 left-0 w-full h-[1px] bg-white/20 -translate-y-1/2 z-0"></div>
                 <div
-                    class="absolute top-1/2 left-0 h-1 bg-mystery-cyan -translate-y-1/2 z-0 transition-all duration-500"
+                    class="absolute top-1/2 left-0 h-[1px] bg-brand-red -translate-y-1/2 z-0 transition-all duration-700"
                     style="width: {% if envio.estado == 'P' %}15%{% elif envio.estado == 'E' %}50%{% else %}100%{% endif %};"
                 ></div>
 
-                <div class="relative z-10 flex flex-col items-center">
-                    <div
-                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'P' or envio.estado == 'E' or envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800{% endif %}"
-                    >
-                        <i class="fa-solid fa-box-open text-xs"></i>
+                <div class="relative z-10 flex justify-between w-full">
+                    <div class="flex flex-col items-center">
+                        <div class="w-4 h-4 rounded-none border border-white {% if envio.estado == 'P' or envio.estado == 'E' or envio.estado == 'R' %}bg-brand-red border-brand-red{% else %}bg-black{% endif %}"></div>
+                        <span class="text-[10px] mt-4 font-bold uppercase tracking-[0.2em] {% if envio.estado == 'P' or envio.estado == 'E' or envio.estado == 'R' %}text-white{% else %}text-white/30{% endif %}">Prep</span>
                     </div>
-                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">Preparando</span>
-                </div>
 
-                <div class="relative z-10 flex flex-col items-center">
-                    <div
-                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'E' or envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800 text-white/40{% endif %}"
-                    >
-                        <i class="fa-solid fa-truck-fast text-xs"></i>
+                    <div class="flex flex-col items-center">
+                        <div class="w-4 h-4 rounded-none border border-white {% if envio.estado == 'E' or envio.estado == 'R' %}bg-brand-red border-brand-red{% else %}bg-black{% endif %}"></div>
+                        <span class="text-[10px] mt-4 font-bold uppercase tracking-[0.2em] {% if envio.estado == 'E' or envio.estado == 'R' %}text-white{% else %}text-white/30{% endif %}">Transit</span>
                     </div>
-                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">En Camino</span>
-                </div>
 
-                <div class="relative z-10 flex flex-col items-center">
-                    <div
-                        class="w-8 h-8 rounded-full flex items-center justify-center {% if envio.estado == 'R' %}bg-mystery-cyan text-black{% else %}bg-gray-800 text-white/40{% endif %}"
-                    >
-                        <i class="fa-solid fa-house-chimney text-xs"></i>
+                    <div class="flex flex-col items-center">
+                        <div class="w-4 h-4 rounded-none border border-white {% if envio.estado == 'R' %}bg-brand-red border-brand-red{% else %}bg-black{% endif %}"></div>
+                        <span class="text-[10px] mt-4 font-bold uppercase tracking-[0.2em] {% if envio.estado == 'R' %}text-white{% else %}text-white/30{% endif %}">Delivered</span>
                     </div>
-                    <span class="text-[10px] mt-2 font-bold uppercase tracking-tighter">Entregado</span>
                 </div>
             </div>
             
             {% if envio.numero_guia %}
-            <div class="my-8 p-6 rounded-2xl bg-white/5 border border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="my-12 p-8 border border-white/20 bg-white/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
                 <div>
-                    <h5 class="text-white/80 font-bold mb-1">Guía Oficial de Envío</h5>
-                    <div class="flex items-center gap-3">
-                        <code class="text-xl font-mono text-mystery-gold bg-black/30 px-3 py-1 rounded-lg border border-white/10 select-all">{{ envio.numero_guia }}</code>
-                        <button onclick="navigator.clipboard.writeText('{{ envio.numero_guia }}'); this.innerHTML='<i class=\'fa-solid fa-check\'></i>';" class="text-white/50 hover:text-white transition-colors" title="Copiar">
-                            <i class="fa-regular fa-copy"></i>
+                    <h5 class="text-white/40 uppercase tracking-widest text-xs mb-4">Official Tracking Number</h5>
+                    <div class="flex items-center gap-4">
+                        <code class="text-2xl font-mono text-white select-all">{{ envio.numero_guia }}</code>
+                        <button onclick="navigator.clipboard.writeText('{{ envio.numero_guia }}'); this.innerHTML='COPIED';" class="text-brand-red uppercase text-[10px] tracking-widest font-bold hover:text-white transition-colors">
+                            COPY
                         </button>
                     </div>
                 </div>
                 <a href="https://www.servientrega.com.ec/rastreo/guia/" target="_blank" rel="noopener noreferrer" 
-                   class="px-6 py-3 rounded-xl bg-gradiente-principal hover:brightness-110 text-white font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2">
-                    <i class="fa-solid fa-truck-fast"></i> Rastrear en Servientrega
+                   class="px-8 py-4 bg-brand-red hover:bg-white hover:text-black text-white uppercase text-xs tracking-widest font-bold transition-colors">
+                    Track via Courier
                 </a>
             </div>
             {% endif %}
 
-            <div class="grid grid-cols-2 gap-4 text-sm border-t border-white/5 pt-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-sm border-t border-white/20 pt-8 mt-12">
                 <div>
-                    <p class="text-white/40 uppercase text-[10px] font-bold">Destinatario</p>
-                    <p class="text-white">{{ envio.nombre_receptor }}</p>
+                    <p class="text-white/40 uppercase tracking-widest text-[10px] mb-2">Recipient</p>
+                    <p class="text-xl uppercase serif-display italic">{{ envio.nombre_receptor }}</p>
                 </div>
                 <div>
-                    <p class="text-white/40 uppercase text-[10px] font-bold">Destino</p>
-                    <p class="text-white">{{ envio.ciudad }}, {{ envio.pais }}</p>
+                    <p class="text-white/40 uppercase tracking-widest text-[10px] mb-2">Destination</p>
+                    <p class="text-xl uppercase serif-display italic">{{ envio.ciudad }}, {{ envio.pais }}</p>
                 </div>
             </div>
         </div>

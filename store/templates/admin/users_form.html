@@ -1,75 +1,70 @@
 {% extends "index.html" %}
 
 {% block contenido %}
-<div class="min-h-screen pt-24 pb-12 px-4 md:px-8 flex items-center justify-center">
+<div class="min-h-screen pt-24 pb-12 flex items-center justify-center">
     <div class="w-full max-w-2xl">
-        <a href="{% url 'admin_users_list' %}" class="inline-flex items-center gap-2 text-white/40 hover:text-white mb-6 transition-colors text-sm">
-            <i class="fa-solid fa-arrow-left"></i> Volver a usuarios
+        <a href="{% url 'admin_users_list' %}" class="inline-flex items-center gap-2 text-white/40 hover:text-white mb-8 transition-colors uppercase tracking-[0.2em] text-[10px] font-bold">
+            <i class="fa-solid fa-arrow-left"></i> Return to Directory
         </a>
 
-        <div class="glass-card rounded-2xl border border-white/10 p-8 md:p-10 shadow-2xl relative overflow-hidden">
-            <!-- Background Decoration -->
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-mystery-purple/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="border border-white/20 p-8 md:p-16 relative">
+            <div class="flex flex-col md:flex-row items-start md:items-end gap-6 mb-12 border-b border-white/20 pb-8">
+                <div class="h-20 w-20 border border-white flex items-center justify-center text-white font-black text-4xl serif-display">
+                    {{ object.username.0|upper }}
+                </div>
+                <div>
+                    <h2 class="serif-display text-3xl font-black italic">Edit <span class="text-brand-red">Identity</span></h2>
+                    <p class="uppercase tracking-[0.3em] text-xs text-white/40 mt-2">{{ object.username }}</p>
+                </div>
+            </div>
 
-            <div class="relative z-10">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-mystery-purple to-mystery-pink flex items-center justify-center text-white font-extrabold text-3xl shadow-glow">
-                        {{ object.username.0|upper }}
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">Editar Usuario</h2>
-                        <p class="text-white/40">{{ object.username }}</p>
+            <form method="post" class="space-y-12 mystery-form">
+                {% csrf_token %}
+
+                <!-- Estado Activo -->
+                <div>
+                    <div class="flex items-center justify-between border border-white/20 p-6">
+                        <div>
+                            <h3 class="uppercase tracking-widest text-sm font-bold text-white mb-1">Account Status</h3>
+                            <p class="text-[10px] uppercase tracking-widest text-white/40">Deactivate to revoke access</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="is_active" class="sr-only peer" {% if object.is_active %}checked{% endif %}>
+                            <div class="w-12 h-6 bg-black border border-white peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-white after:border after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-red peer-checked:border-brand-red"></div>
+                        </label>
                     </div>
                 </div>
 
-                <form method="post" class="space-y-6">
-                    {% csrf_token %}
-
-                    <!-- Estado Activo -->
-                    <div class="p-5 rounded-xl bg-white/5 border border-white/10">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-white font-semibold mb-1">Estado de Cuenta</h3>
-                                <p class="text-xs text-white/40">Desactiva para bloquear acceso</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="is_active" class="sr-only peer" {% if object.is_active %}checked{% endif %}>
-                                <div class="w-14 h-7 bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                        </div>
+                <!-- Grupos / Roles -->
+                <div>
+                    <label class="block uppercase tracking-[0.2em] text-xs font-bold text-white/60 mb-6">Clearance Levels</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for group in all_groups %}
+                        <label class="relative flex items-center p-4 border border-white/20 bg-black hover:border-white cursor-pointer transition-all">
+                            <input type="checkbox" name="groups" value="{{ group.id }}" 
+                                   class="form-checkbox h-4 w-4 rounded-none text-brand-red border-white/50 bg-black focus:ring-0 mr-4"
+                                   {% if group in object.groups.all %}checked{% endif %}>
+                            <span class="text-white uppercase tracking-widest text-xs font-bold">{{ group.name }}</span>
+                        </label>
+                        {% empty %}
+                        <p class="text-white/30 text-xs uppercase tracking-widest col-span-2">No clearance levels defined.</p>
+                        {% endfor %}
                     </div>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-red mt-4 font-bold">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Modify with caution. Changes apply immediately.
+                    </p>
+                </div>
 
-                    <!-- Grupos / Roles -->
-                    <div>
-                        <label class="block text-sm font-medium text-white/60 mb-3">Grupos de Permisos</label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {% for group in all_groups %}
-                            <label class="relative flex items-center p-4 rounded-xl border border-white/10 bg-black/20 hover:bg-white/5 cursor-pointer transition-all group-select">
-                                <input type="checkbox" name="groups" value="{{ group.id }}" 
-                                       class="form-checkbox h-5 w-5 text-mystery-purple rounded border-white/20 bg-white/5 focus:ring-0 mr-3"
-                                       {% if group in object.groups.all %}checked{% endif %}>
-                                <span class="text-white/80 font-medium">{{ group.name }}</span>
-                            </label>
-                            {% empty %}
-                            <p class="text-white/30 text-sm italic col-span-2">No hay grupos definidos en el sistema.</p>
-                            {% endfor %}
-                        </div>
-                        <p class="text-xs text-white/30 mt-2">
-                            <i class="fa-solid fa-circle-info mr-1"></i> Selecciona los roles para asignar permisos específicos.
-                        </p>
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="pt-6 flex gap-4">
-                        <button type="submit" class="flex-1 py-4 rounded-xl bg-mystery-purple-gradient text-white font-bold tracking-wide hover:shadow-glow-purple transition-all hover:-translate-y-1">
-                            Guardar Cambios
-                        </button>
-                        <a href="{% url 'admin_users_list' %}" class="px-6 py-4 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white font-semibold transition-colors">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
-            </div>
+                <!-- Botones -->
+                <div class="pt-8 flex flex-col md:flex-row gap-6 border-t border-white/20">
+                    <button type="submit" class="flex-1 py-4 border border-brand-red bg-brand-red text-white hover:bg-white hover:border-white hover:text-black uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        Save Configuration
+                    </button>
+                    <a href="{% url 'admin_users_list' %}" class="px-8 py-4 border border-white/40 text-white/60 hover:text-white hover:border-white text-center uppercase tracking-[0.2em] text-xs font-bold transition-colors">
+                        Abort
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

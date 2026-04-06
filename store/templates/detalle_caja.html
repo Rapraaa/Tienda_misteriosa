@@ -1,56 +1,85 @@
-{% extends "index.html" %} {% block contenido %}
-<div class="max-w-7xl mx-auto px-4 md:px-6 py-20">
-    <div class="glass-card rounded-3xl border-2 border-white/10 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-        <div class="bg-black/20 p-8 md:p-12 lg:p-16 flex items-center justify-center">
-            <i class="fa-solid fa-gift text-9xl md:text-[10rem] text-mystery-cyan"></i>
+{% extends "index.html" %} 
+{% block contenido %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;700;900&display=swap');
+.font-playfair { font-family: 'Playfair Display', serif; }
+.font-inter { font-family: 'Inter', sans-serif; }
+</style>
+
+<div class="bg-black text-white min-h-screen grid grid-cols-1 md:grid-cols-2">
+    <!-- Left Side: Edge-to-edge image -->
+    <div class="relative w-full h-[50vh] md:h-full md:min-h-screen overflow-hidden bg-[#050505]">
+        {% if caja.imagen %}
+        <img src="{{ caja.imagen.url }}" alt="{{ caja.nombre }}" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700">
+        {% else %}
+        <!-- Brutalist/Abstract Placeholder if no image -->
+        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" alt="Box Placeholder" class="absolute inset-0 w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700">
+        {% endif %}
+    </div>
+
+    <!-- Right Side: Details and purchasing logic -->
+    <div class="p-12 md:p-24 flex flex-col justify-center font-inter bg-black">
+        
+        <div class="mb-12">
+            <h1 class="font-playfair text-7xl md:text-9xl leading-none uppercase tracking-tighter break-words">{{ caja.nombre }}</h1>
         </div>
 
-        <div class="p-6 md:p-8 lg:p-12">
-            <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">{{ caja.nombre }}</h1>
-            <p class="text-gray-400 leading-relaxed mb-8">{{ caja.descripcion }}</p>
+        <div class="flex flex-col border-t border-white/20 mt-8">
+            <!-- Description -->
+            <div class="border-b border-white/20 py-6">
+                <p class="text-xs tracking-[0.2em] uppercase text-white/50 mb-3">IDENTIFIER // DESC</p>
+                <p class="text-sm md:text-base leading-relaxed text-white/90">{{ caja.descripcion }}</p>
+            </div>
 
-            <div class="glass-card p-6 rounded-xl mb-8 border border-white/10">
-                <h4 class="text-mystery-cyan font-semibold mb-4 text-lg">Beneficios</h4>
-                <ul class="space-y-2 text-sm md:text-base">
-                    <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-check text-mystery-pink"></i> Selección aleatoria de 3 ítems
+            <!-- Benefits -->
+            <div class="border-b border-white/20 py-6">
+                <p class="text-xs tracking-[0.2em] uppercase text-white/50 mb-4">SPEC // CONTENTS</p>
+                <ul class="text-xs tracking-[0.1em] uppercase space-y-3 text-white/80">
+                    <li class="flex items-start gap-4">
+                        <span class="text-white/30">[01]</span>
+                        <span>Selección aleatoria de 3 ítems</span>
                     </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fa-solid fa-check text-mystery-pink"></i> Valor potencial de hasta el 150% de tu
-                        compra.
+                    <li class="flex items-start gap-4">
+                        <span class="text-white/30">[02]</span>
+                        <span>Valor potencial de hasta 150%</span>
                     </li>
                 </ul>
             </div>
 
-            {% if caja.es_exclusiva and user.membresia.estado != 'A' %}
-            <div class="text-center border-2 border-mystery-pink rounded-xl p-6">
-                <i class="fa-solid fa-lock text-4xl text-mystery-pink mb-3"></i>
-                <p class="mb-4">Esta caja es <strong>Exclusiva para Socios Pass</strong>.</p>
-                <a
-                    href="{% url 'suscribirse_premium' %}"
-                    class="inline-block px-8 py-3 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 mt-4"
-                >
-                    Hacerme Premium
-                </a>
+            <!-- Pricing & Logic -->
+            <div class="border-b border-white/20 py-6">
+                <p class="text-xs tracking-[0.2em] uppercase text-white/50 mb-3">TRANSACTION // VALUE</p>
+                
+                {% if caja.es_exclusiva and user.membresia.estado != 'A' %}
+                    <div class="mt-4">
+                        <p class="text-sm tracking-[0.1em] text-[#b91c1c] uppercase mb-4 flex items-center gap-3 font-bold">
+                            <i class="fa-solid fa-lock text-lg"></i> RESTRICTED: SOCIOS PASS ONLY
+                        </p>
+                        <a href="{% url 'suscribirse_premium' %}" class="block w-full py-8 text-2xl md:text-4xl uppercase text-center border border-white hover:bg-[#b91c1c] hover:text-black hover:border-[#b91c1c] transition-colors mt-12 font-playfair font-bold">
+                            UPGRADE TO PREMIUM
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="flex flex-col mt-2">
+                        <span class="text-[0.65rem] tracking-[0.2em] text-white/50 block mb-2">
+                            {% if user.membresia.estado == 'A' %}MEMBER RATE{% else %}STANDARD RATE{% endif %}
+                        </span>
+                        <span class="font-playfair text-5xl md:text-7xl block text-white">
+                            {% if user.membresia.estado == 'A' %}
+                                ${{ caja.precio_suscripcion }}
+                            {% else %}
+                                ${{ caja.precio_base }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <a href="{% url 'agregar_carrito' caja.id %}" class="block text-center w-full py-8 text-2xl md:text-4xl uppercase border border-white hover:bg-[#b91c1c] hover:text-black hover:border-[#b91c1c] transition-colors mt-12 font-playfair font-bold">
+                        ADD TO CART
+                    </a>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div>
-                    <small class="text-gray-400 text-sm">Precio para ti:</small>
-                    <h2 class="text-4xl md:text-5xl font-extrabold text-mystery-cyan mt-1">
-                        {% if user.membresia.estado == 'A' %} ${{ caja.precio_suscripcion }} {% else %}
-                        ${{caja.precio_base }} {% endif %}
-                    </h2>
-                </div>
-                <a
-                    href="{% url 'agregar_carrito' caja.id %}"
-                    class="px-8 py-4 rounded-full bg-mystery-purple-gradient text-white font-semibold text-sm uppercase tracking-wide hover:-translate-y-1 hover:shadow-lg hover:shadow-mystery-pink/40 transition-all duration-300 whitespace-nowrap flex items-center gap-2"
-                >
-                    <i class="fa-solid fa-cart-shopping"></i> Agregar al Carrito
-                </a>
-            </div>
-            {% endif %}
         </div>
+
     </div>
 </div>
 
@@ -65,7 +94,6 @@ function agregarAlCarrito(cajaId, cajaNombre) {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      // Mostrar mensaje de éxito y actualizar
       alert(`${cajaNombre} agregada al carrito`);
       location.reload();
     } else {

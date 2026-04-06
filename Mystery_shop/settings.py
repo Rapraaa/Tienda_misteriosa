@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'store',
     'widget_tweaks',
     'simple_history',
+    'django_filters', # filtros de bsuqueda pa la api
+    'rest_framework', # don api
 ]
 
 MIDDLEWARE = [

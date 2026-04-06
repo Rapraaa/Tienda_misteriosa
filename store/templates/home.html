@@ -1,185 +1,104 @@
-{% extends "index.html" %}
+{% extends "base.html" %}
 
-{% block title %}Mysterio | Catálogo{% endblock %}
+{% block title %}Mysterio | Exhibition{% endblock %}
 
 {% block contenido %}
-<header class="relative overflow-hidden">
-  <div class="max-w-7xl mx-auto px-4 md:px-6 pt-8 pb-10">
-    <div class="glass rounded-3xl border border-white/10 shadow-glow overflow-hidden">
-      <div class="relative px-6 md:px-10 py-10 md:py-14">
-        <div class="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-mystery-purple/30 blur-[90px]"></div>
-        <div class="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-mystery-pink/25 blur-[90px]"></div>
+<div class="max-w-[1600px] mx-auto">
 
-        <div class="relative grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <div
-              class="inline-flex items-center gap-2 glass px-4 py-2 rounded-full border border-white/10 text-xs tracking-widest uppercase text-white/70">
-              <i class="fa-solid fa-eye text-mystery-cyan"></i>
-              Dark Mystery Shop
-            </div>
-            <h1 class="mt-5 text-4xl md:text-6xl font-extrabold leading-tight">
-              Descubre lo <span
-                class="bg-gradient-to-r from-mystery-gold to-mystery-gold-dark bg-clip-text text-transparent">inesperado</span>.
-            </h1>
-            <p class="mt-4 text-white/70 text-base md:text-lg leading-relaxed">
-              Cajas misteriosas con ítems sorpresa. Socios <span class="text-mystery-cyan font-semibold">Mysterio
-                Pass</span> reciben descuento automático.
-            </p>
+  <!-- HERO SECTION: Huge typography -->
+  <section class="min-h-[80vh] flex flex-col justify-end pb-32 reveal">
+    <h1 class="serif-display text-7xl md:text-[12rem] font-black uppercase leading-[0.8] tracking-tighter mix-blend-difference">
+      The <br/>
+      <span class="italic font-light">Unknown.</span>
+    </h1>
+    <div class="mt-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-12 border-t border-white/20 pt-8">
+      <p class="max-w-xl text-lg font-light tracking-wide text-white/70">
+        Curated mysteries packed in absolute void. Elevate your reality.
+      </p>
 
-            {% if user.is_authenticated and user.membresia.estado != 'A' %}
-            <div class="mt-7 flex flex-col sm:flex-row gap-3">
-              <a href="{% url 'suscribirse_premium' %}"
-                class="px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
-                <i class="fa-solid fa-crown"></i> Activar Pass
-              </a>
-              <a href="{% url 'rastrear_pedido' %}"
-                class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest inline-flex items-center justify-center gap-2">
-                <i class="fa-solid fa-location-crosshairs text-mystery-cyan"></i> Rastreo
-              </a>
-            </div>
-            {% elif not user.is_authenticated %}
-            <div class="mt-7 flex flex-col sm:flex-row gap-3">
-              <a href="{% url 'login' %}"
-                class="px-7 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-sm uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center justify-center gap-2">
-                <i class="fa-solid fa-right-to-bracket"></i> Entrar
-              </a>
-              <a href="{% url 'registro' %}"
-                class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest inline-flex items-center justify-center gap-2">
-                <i class="fa-solid fa-wand-magic-sparkles text-mystery-cyan"></i> Crear cuenta
-              </a>
-            </div>
-            {% endif %}
-          </div>
-
-          <div class="relative">
-            <div class="glass-strong rounded-3xl border border-white/10 p-6 md:p-8 shadow-glow-cyan">
-              <div class="flex items-center justify-between gap-4">
-                <div>
-                  <p class="text-white/60 text-xs uppercase tracking-widest">Mood</p>
-                  <p class="text-lg font-extrabold">Mystery Drop</p>
-                </div>
-                <div
-                  class="h-12 w-12 rounded-2xl bg-mystery-purple-gradient flex items-center justify-center text-black">
-                  <i class="fa-solid fa-gift text-xl"></i>
-                </div>
-              </div>
-              <div class="mt-6 grid grid-cols-3 gap-3">
-                <div class="glass rounded-2xl p-4 border border-white/10 text-center">
-                  <i class="fa-solid fa-shield-halved text-mystery-gold"></i>
-                  <p class="mt-2 text-xs text-white/65">Pago seguro</p>
-                </div>
-                <div class="glass rounded-2xl p-4 border border-white/10 text-center">
-                  <i class="fa-solid fa-dice text-mystery-pink"></i>
-                  <p class="mt-2 text-xs text-white/65">Sorpresa real</p>
-                </div>
-                <div class="glass rounded-2xl p-4 border border-white/10 text-center">
-                  <i class="fa-solid fa-truck-fast text-mystery-cyan"></i>
-                  <p class="mt-2 text-xs text-white/65">Envíos</p>
-                </div>
-              </div>
-              <p class="mt-6 text-white/60 text-sm leading-relaxed">
-                Elige una caja, paga con Stripe y recibe tu código interno para seguimiento.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div class="flex flex-wrap gap-8 items-center uppercase tracking-widest text-xs font-bold">
+        {% if user.is_authenticated and user.membresia.estado != 'A' %}
+          <a href="{% url 'suscribirse_premium' %}" class="hover:text-brand-red transition-colors border-b border-transparent hover:border-brand-red pb-1">Unlock VIP</a>
+          <a href="{% url 'rastrear_pedido' %}" class="hover:text-brand-red transition-colors border-b border-transparent hover:border-brand-red pb-1">Rastrear</a>
+        {% elif not user.is_authenticated %}
+          <a href="{% url 'registro' %}" class="hover:text-brand-red transition-colors border-b border-transparent hover:border-brand-red pb-1">Join Cult</a>
+        {% endif %}
       </div>
     </div>
-  </div>
-</header>
+  </section>
 
-<section class="max-w-7xl mx-auto px-4 md:px-6 pb-16">
-  <div class="flex items-end justify-between gap-6 mb-8">
-    <div>
-      <h2 class="text-2xl md:text-3xl font-extrabold">Cajas disponibles</h2>
-      <p class="text-white/60 text-sm mt-1">Explora el catálogo y abre el misterio.</p>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for caja in boxes %}
-    <article
-      class="glass rounded-3xl border border-white/10 shadow-glow overflow-hidden hover:border-white/20 transition-colors {% if caja.estado != 'A' %}opacity-75 grayscale{% endif %}">
-      <div class="p-6">
-        <div class="flex items-start justify-between gap-3">
-          <div>
+  <!-- VERTICAL ART GALLERY EXHIBITION -->
+  <section class="mt-32">
+    <h2 class="uppercase tracking-[0.5em] text-xs text-white/30 mb-32 border-b border-white/10 pb-4">Active Drops // Exhibition</h2>
+    
+    <div class="flex flex-col gap-48">
+      {% for caja in boxes %}
+      <article class="relative flex flex-col {% if forloop.counter|divisibleby:2 %}md:flex-row-reverse md:pl-32{% else %}md:flex-row md:pr-32{% endif %} gap-12 group {% if caja.estado != 'A' %}opacity-40 grayscale{% endif %}">
+        
+        <!-- Massive Typography as visual anchor -->
+        <div class="flex-1 flex flex-col justify-center">
+          <div class="flex items-center gap-6 mb-8 uppercase tracking-[0.2em] text-[10px] text-white/40">
+            <span>NO. 0{{ forloop.counter }}</span>
+            <div class="w-16 h-[1px] bg-white/20"></div>
             {% if caja.estado != 'A' %}
-            <div
-              class="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-500 font-extrabold mb-2">
-              <i class="fa-solid fa-ban"></i> No disponible
-            </div>
-            <br>
-            {% endif %}
-
-            {% if caja.es_exclusiva %}
-            <div
-              class="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full bg-mystery-pink/15 border border-mystery-pink/30 text-mystery-pink font-extrabold">
-              <i class="fa-solid fa-lock"></i> VIP
-            </div>
+              <span class="text-white/30">Depleted</span>
+            {% elif caja.es_exclusiva %}
+              <span class="text-brand-red">VIP Only</span>
             {% else %}
-            <div
-              class="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 font-bold">
-              <i class="fa-solid fa-sparkles text-mystery-cyan"></i> Mystery
-            </div>
+              <span>Available</span>
             {% endif %}
-            <h3 class="mt-4 text-xl font-extrabold">{{ caja.nombre }}</h3>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-            <i class="fa-solid fa-box-open text-mystery-cyan text-xl"></i>
+          
+          <a href="{% url 'box' caja.id %}" class="block">
+            <h3 class="serif-display text-5xl sm:text-7xl md:text-9xl font-black uppercase leading-[0.85] tracking-tighter mb-8 group-hover:text-brand-red transition-colors duration-700 break-words">
+              {{ caja.nombre }}
+            </h3>
+          </a>
+          
+          <p class="text-white/60 font-light text-xl max-w-lg leading-relaxed mb-12">
+            {{ caja.descripcion|default:"A curated mystery suspended in the void." }}
+          </p>
+          
+          <div class="flex items-end gap-12 flex-wrap">
+            <div class="flex flex-col">
+              {% if user.is_authenticated and user.membresia.estado == 'A' %}
+                <span class="line-through text-white/30 text-sm mb-1">${{ caja.precio_base }}</span>
+                <span class="serif-display text-5xl italic text-brand-red">${{ caja.precio_suscripcion }}</span>
+              {% else %}
+                <span class="uppercase tracking-widest text-[10px] text-white/40 mb-2">Value</span>
+                <span class="serif-display text-5xl italic">${{ caja.precio_base }}</span>
+              {% endif %}
+            </div>
+            
+            <div class="flex gap-6 ml-auto md:ml-0 mt-4 md:mt-0">
+              {% if perms.store.change_mystery_box %}
+                <a href="{% url 'editar_caja' caja.id %}" class="uppercase tracking-widest text-[10px] hover:text-brand-red transition-colors border-b border-transparent hover:border-brand-red pb-1" title="Editar">
+                  Edit
+                </a>
+              {% endif %}
+              
+              {% if caja.estado == 'A' %}
+                <button onclick="agregarAlCarrito({{ caja.id }}, '{{ caja.nombre|escapejs }}')" class="uppercase tracking-widest text-[10px] hover:text-brand-red transition-colors border-b border-transparent hover:border-brand-red pb-1" title="Agregar">
+                  Acquire
+                </button>
+              {% endif %}
+              
+              <a href="{% url 'box' caja.id %}" class="uppercase tracking-widest text-[10px] hover:text-brand-red transition-colors border-b border-white pb-1 group-hover:border-brand-red">
+                Examine
+              </a>
+            </div>
           </div>
         </div>
-
-        <p class="mt-3 text-white/65 text-sm leading-relaxed min-h-[44px]">
-          {{ caja.descripcion|default:"Una caja con secretos que no cuentan la historia completa."|truncatechars:90 }}
-        </p>
-
-        <div class="mt-6 flex items-end justify-between gap-4">
-          <div>
-            <p class="text-white/55 text-xs uppercase tracking-widest">Precio</p>
-            {% if user.is_authenticated and user.membresia.estado == 'A' %}
-            <p class="text-white/50 text-xs line-through">${{ caja.precio_base }}</p>
-            <p class="text-3xl font-extrabold text-mystery-cyan">${{ caja.precio_suscripcion }}</p>
-            <p class="text-[11px] text-mystery-pink font-bold uppercase tracking-widest">Socio Pass</p>
-            {% else %}
-            <p class="text-3xl font-extrabold">${{ caja.precio_base }}</p>
-            <p class="text-[11px] text-white/55 uppercase tracking-widest">Socio: ${{ caja.precio_suscripcion }}</p>
-            {% endif %}
-          </div>
-          <div class="flex gap-2">
-            {% if perms.store.change_mystery_box %}
-            <a href="{% url 'editar_caja' caja.id %}"
-              class="px-4 py-3 rounded-full border border-yellow-500/30 hover:bg-yellow-500/10 font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2 text-yellow-500"
-              title="Editar Caja">
-              <i class="fa-solid fa-pen-to-square"></i>
-            </a>
-            {% endif %}
-
-            {% if caja.estado == 'A' %}
-            <button onclick="agregarAlCarrito({{ caja.id }}, '{{ caja.nombre|escapejs }}')"
-              class="px-4 py-3 rounded-full border border-mystery-cyan/30 hover:bg-mystery-cyan/10 font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2 text-mystery-cyan">
-              <i class="fa-solid fa-cart-plus"></i>
-            </button>
-            <a href="{% url 'box' caja.id %}"
-              class="px-5 py-3 rounded-full bg-mystery-purple-gradient shadow-glow-pink font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2">
-              Ver <i class="fa-solid fa-arrow-right"></i>
-            </a>
-            {% else %}
-            <a href="{% url 'box' caja.id %}"
-              class="px-5 py-3 rounded-full border border-white/10 bg-white/5 font-semibold text-xs uppercase tracking-widest hover:-translate-y-0.5 transition-transform inline-flex items-center gap-2 ml-auto text-white/50">
-              Detalles
-            </a>
-            {% endif %}
-          </div>
-        </div>
+      </article>
+      {% empty %}
+      <div class="min-h-[50vh] flex flex-col items-center justify-center text-center">
+        <h3 class="serif-display text-6xl italic text-white/20 mb-8">The void is empty.</h3>
+        <p class="uppercase tracking-[0.3em] text-xs text-white/40">No exhibitions currently active.</p>
       </div>
-    </article>
-    {% empty %}
-    <div class="col-span-full glass rounded-3xl border border-white/10 p-10 text-center text-white/70">
-      Aún no hay cajas disponibles.
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
-</section>
+  </section>
+</div>
 
 <script>
   function agregarAlCarrito(cajaId, cajaNombre) {
@@ -192,15 +111,12 @@
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Actualizar contador del carrito
           location.reload();
         } else {
-          alert(data.error || 'Error al agregar al carrito');
+          alert(data.error || 'Error en la matriz.');
         }
       })
       .catch(error => {
-        console.error('Error:', error);
-        // Si no es AJAX, redirigir normalmente
         window.location.href = `/carrito/agregar/${cajaId}/`;
       });
   }

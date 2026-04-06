@@ -3,51 +3,51 @@
 {% block title %}Eliminar Cupón | Mysterio{% endblock %}
 
 {% block contenido %}
-<section class="max-w-2xl mx-auto px-4 md:px-6 py-16">
-  <div class="glass-strong rounded-3xl border border-red-500/30 p-8 text-center">
-    <div class="h-20 w-20 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-6">
-      <i class="fa-solid fa-exclamation-triangle text-red-400 text-4xl"></i>
+<div class="min-h-screen pt-24 pb-12 flex items-center justify-center">
+  <div class="w-full max-w-2xl border border-brand-red p-8 md:p-16 text-center">
+    <div class="mb-8 flex justify-center text-brand-red text-6xl">
+      <i class="fa-solid fa-triangle-exclamation"></i>
     </div>
     
-    <h1 class="text-3xl font-extrabold mb-3">¿Eliminar Cupón?</h1>
-    <p class="text-white/70 mb-6">
-      Esta acción eliminará permanentemente el cupón <span class="font-mono font-bold text-mystery-gold">{{ object.codigo }}</span>
+    <h1 class="serif-display text-4xl md:text-5xl font-black italic uppercase text-brand-red mb-4">Revoke Token?</h1>
+    <p class="uppercase tracking-widest text-xs text-white/60 mb-12">
+      This action permanently neutralizes token <span class="font-mono font-bold text-white bg-white/10 px-2">{{ object.codigo }}</span>
     </p>
     
-    <div class="p-4 rounded-xl bg-white/5 border border-white/10 mb-6 text-left">
-      <div class="grid grid-cols-2 gap-3 text-sm">
+    <div class="border border-white/20 p-8 mb-12 text-left bg-black text-white/60 text-[10px] uppercase tracking-[0.2em] font-bold">
+      <div class="grid grid-cols-2 gap-y-6">
         <div>
-          <span class="text-white/50">Descuento:</span>
+          <span class="text-white/40 block mb-1">Value</span>
           {% if object.descuento_porcentaje > 0 %}
-            <span class="font-bold ml-2">{{ object.descuento_porcentaje }}%</span>
+            <span class="text-white text-sm">{{ object.descuento_porcentaje }}%</span>
           {% else %}
-            <span class="font-bold ml-2">${{ object.descuento_fijo }}</span>
+            <span class="text-white text-sm">${{ object.descuento_fijo }}</span>
           {% endif %}
         </div>
         <div>
-          <span class="text-white/50">Usos:</span>
-          <span class="font-bold ml-2">{{ object.usos_actuales }}</span>
+          <span class="text-white/40 block mb-1">Uses</span>
+          <span class="text-white text-sm">{{ object.usos_actuales }}</span>
         </div>
         <div>
-          <span class="text-white/50">Estado:</span>
-          <span class="font-bold ml-2">{{ object.activo|yesno:"Activo,Inactivo" }}</span>
+          <span class="text-white/40 block mb-1">Status</span>
+          <span class="text-white text-sm">{{ object.activo|yesno:"Active,Inactive" }}</span>
         </div>
         <div>
-          <span class="text-white/50">Expira:</span>
-          <span class="font-bold ml-2">{{ object.fecha_expiracion|date:"d/m/Y" }}</span>
+          <span class="text-white/40 block mb-1">Expiration</span>
+          <span class="text-white text-sm">{{ object.fecha_expiracion|date:"d M Y" }}</span>
         </div>
       </div>
     </div>
     
-    <form method="post" class="flex gap-3 justify-center">
+    <form method="post" class="flex flex-col md:flex-row gap-6">
       {% csrf_token %}
-      <button type="submit" class="px-7 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 font-semibold text-sm uppercase tracking-widest transition-colors">
-        <i class="fa-solid fa-trash"></i> Sí, Eliminar
+      <button type="submit" class="flex-1 py-4 border border-brand-red bg-brand-red text-white hover:bg-white hover:border-white hover:text-black uppercase tracking-[0.2em] text-[10px] font-bold transition-colors">
+        Confirm Neutralization
       </button>
-      <a href="{% url 'cupones_lista' %}" class="px-7 py-3 rounded-full border border-white/15 hover:bg-white/5 transition-colors font-semibold text-sm uppercase tracking-widest">
-        <i class="fa-solid fa-times"></i> Cancelar
+      <a href="{% url 'cupones_lista' %}" class="flex-1 py-4 border border-white/40 text-white/60 hover:text-white hover:border-white text-center uppercase tracking-[0.2em] text-[10px] font-bold transition-colors">
+        Abort
       </a>
     </form>
   </div>
-</section>
+</div>
 {% endblock %}
